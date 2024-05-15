@@ -30,8 +30,10 @@ if($result){
     'y'=>$row[6]
     ));
   }
+  $response = array("jwifi" => $data);
+
   header('Content-Type: application/json; charset=utf8');
-  $json=json_encode($data, JSON_PRETTY_PRINT+JSON_UNESCAPED_UNICODE);
+  $json=json_encode($response, JSON_PRETTY_PRINT+JSON_UNESCAPED_UNICODE);
   echo $json;
 }
 
