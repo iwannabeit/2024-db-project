@@ -32,6 +32,5 @@
             android:name="com.naver.maps.map.CLIENT_ID"
             android:value="f5wddcflyd" />
     </application>
-    <uses-permission android:name="android.permission.INTERNET" />
 
 </manifest>
