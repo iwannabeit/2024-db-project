@@ -66,7 +66,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
                     }
 
-
                 }
                 override fun onFailure(call: Call<NaverMapItem>, t: Throwable) {
                     // 통신 실패 시 처리할 코드
