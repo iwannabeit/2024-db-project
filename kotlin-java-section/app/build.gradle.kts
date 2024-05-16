@@ -51,7 +51,4 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.2.0")
     implementation("com.google.android.material:material:1.9.0")
     implementation("com.google.android.gms:play-services-location:18.0.0")
-
-    // Ted Permission - RxJava3
-    implementation("io.github.ParkSangGwon:tedpermission-rx3:3.3.0")
 }
