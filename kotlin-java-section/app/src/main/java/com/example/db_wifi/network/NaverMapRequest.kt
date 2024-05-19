@@ -1,27 +1,27 @@
-package com.example.db_wifi.network;
+package com.example.db_wifi.network
 
-import okhttp3.OkHttpClient;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
-public class NaverMapRequest {
-    private static Retrofit retrofit = null;
+object NaverMapRequest {
+    private const val BASE_URL = "https://naveropenapi.apigw.ntruss.com/map-place/v1/"  // 지도 API의 Base URL
 
-    public static Retrofit getClient() {
-        if (retrofit == null) {
-            OkHttpClient client = new OkHttpClient.Builder().addInterceptor(chain -> {
-                return chain.proceed(chain.request().newBuilder()
-                        .addHeader("X-NCP-APIGW-API-KEY-ID", "f5wddcflyd")
-                        .addHeader("X-NCP-APIGW-API-KEY", "1isX4VdL0ZA5GRCTfcVFYNFoucNx46Vcz5FGdm2m")
-                        .build());
-            }).build();
+    private val client = OkHttpClient.Builder().addInterceptor { chain ->
+        val request = chain.request().newBuilder()
+            .addHeader("X-NCP-APIGW-API-KEY-ID", "t0031hl9ab")  // 클라이언트 ID
+            .addHeader("X-NCP-APIGW-API-KEY", "bkM6a2T67diyPPdw97f7zPBaWBjVGlu8XMNKpbMy")  // 클라이언트 비밀 키
+            .build()
+        chain.proceed(request)
+    }.build()
 
-            retrofit = new Retrofit.Builder()
-                    .baseUrl("https://naveropenapi.apigw.ntruss.com/map-direction/v1/driving/")
-                    .client(client)
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build();
-        }
-        return retrofit;
+    private val retrofit = Retrofit.Builder()
+        .baseUrl(BASE_URL)
+        .client(client)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+
+    fun getClient(): Retrofit {
+        return retrofit
     }
 }

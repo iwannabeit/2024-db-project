@@ -1,7 +1,7 @@
-package com.example.db_wifi.network;
+package com.example.db_wifi.network
 
-public class NaverMapData {
-    public double latitude;
-    public double longitude;
-    public String address;
-}
+data class NaverMapData(
+    val latitude: Double,
+    val longitude: Double,
+    val address: String
+)

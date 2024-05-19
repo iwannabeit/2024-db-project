@@ -29,8 +29,9 @@
             </intent-filter>
         </activity>
         <meta-data
-            android:name="com.naver.maps.map.CLIENT_ID"
-            android:value="f5wddcflyd" />
+        android:name="com.naver.maps.map.CLIENT_ID"
+        android:value="t0031hl9ab" />
     </application>
 
 </manifest>
+

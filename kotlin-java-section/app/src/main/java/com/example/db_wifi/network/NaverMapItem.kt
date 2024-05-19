@@ -1,7 +1,5 @@
-package com.example.db_wifi.network;
+package com.example.db_wifi.network
 
-import java.util.List;
-
-public class NaverMapItem {
-    public List<NaverMapData> jjwifi;
-}
+data class NaverMapItem(
+    val jjwifi: List<NaverMapData>
+)
