@@ -62,7 +62,25 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                         naverMapList = response.body()
                         naverMapInfo = naverMapList?.jjwifi
 
-                        Toast.makeText(this@MainActivity, naverMapInfo?.get(1)?.address, Toast.LENGTH_LONG).show()
+//                        Toast.makeText(this@MainActivity, naverMapInfo?.get(1)?.address, Toast.LENGTH_LONG).show()
+
+
+
+                        naverMapInfo?.let{
+                            for(i in 0 until it.size){
+//                                val markers = arrayOfNulls<Marker>(it.size)
+                                val marker = Marker()
+
+//                                val marker = markers[i]
+                                val lat = it.get(i).y
+                                val lnt = it.get(i).x
+
+
+                                marker.position = LatLng(lat, lnt)
+                                marker.map = naverMap
+                            }
+                        }
+
 
                     }
 
@@ -72,7 +90,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     Log.v("디버깅중", "실패!!!!!")
                 }
             })
-
 
             val marker = Marker()
             marker.position = LatLng(37.5670135, 126.9783740)
