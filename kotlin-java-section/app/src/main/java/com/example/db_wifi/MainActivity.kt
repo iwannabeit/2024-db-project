@@ -9,7 +9,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.naver.maps.geometry.LatLng
-//import com.naver.maps.map.CameraUpdate
 import com.naver.maps.map.MapFragment
 import com.naver.maps.map.NaverMap
 import com.naver.maps.map.NaverMapSdk
@@ -21,6 +20,7 @@ import retrofit2.Callback
 import retrofit2.Response
 
 
+//import com.naver.maps.map.CameraUpdate
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private var naverMapInfo: List<NaverMapData>? = null
     private var naverMapList: NaverMapItem? = null
@@ -57,7 +57,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 //            naverMap.moveCamera(cameraUpdate)
 
             // 마커 띄우는 곳!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            val marker = Marker()
+            val s_marker = Marker()
 
             //클라이언트 객체 생성
             val naverMapApiInterface = NaverMapRequest.getClient().create(NaverMapApiInterface::class.java)
@@ -87,7 +87,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                                 val lat = it.get(i).y
                                 val lnt = it.get(i).x
 
-                                marker.position = LatLng(lat, lnt)
+                                s_marker.position = LatLng(lat, lnt)
                                 //클러스터링
                                 clusterer.add(ItemKey(i, LatLng(it.get(i).y, it.get(i).x)), null)
 
