@@ -9,10 +9,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.naver.maps.geometry.LatLng
+import com.naver.maps.map.CameraUpdate
 import com.naver.maps.map.MapFragment
 import com.naver.maps.map.NaverMap
 import com.naver.maps.map.NaverMapSdk
 import com.naver.maps.map.OnMapReadyCallback
+import com.naver.maps.map.clustering.Clusterer
 import com.naver.maps.map.overlay.Marker
 import retrofit2.Call
 import retrofit2.Callback
@@ -22,6 +24,10 @@ import retrofit2.Response
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private var naverMapInfo: List<NaverMapData>? = null
     private var naverMapList: NaverMapItem? = null
+    private var clusterer: Clusterer<ItemKey> = Clusterer.Builder<ItemKey>().screenDistance(20.0).build()
+
+//    val distance: Clusterer<ItemKey> = Clusterer.Builder<ItemKey>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -44,6 +50,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     }
         override fun onMapReady(naverMap: NaverMap) {
+            //전주 시청으로 카메라 시점 시작
+            val cameraUpdate = CameraUpdate.scrollTo(LatLng(35.8247083, 127.147528))
+            naverMap.moveCamera(cameraUpdate)
+
+
+            // 마커 띄우는 곳!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            val marker = Marker()
 
             //클라이언트 객체 생성
             val naverMapApiInterface = NaverMapRequest.getClient().create(NaverMapApiInterface::class.java)
@@ -62,25 +75,25 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                         naverMapList = response.body()
                         naverMapInfo = naverMapList?.jjwifi
 
+
 //                        Toast.makeText(this@MainActivity, naverMapInfo?.get(1)?.address, Toast.LENGTH_LONG).show()
-
-
 
                         naverMapInfo?.let{
                             for(i in 0 until it.size){
 //                                val markers = arrayOfNulls<Marker>(it.size)
-                                val marker = Marker()
 
 //                                val marker = markers[i]
                                 val lat = it.get(i).y
                                 val lnt = it.get(i).x
 
-
                                 marker.position = LatLng(lat, lnt)
-                                marker.map = naverMap
+                                //클러스터링
+                                clusterer.add(ItemKey(i, LatLng(it.get(i).y, it.get(i).x)), null)
+
                             }
                         }
-
+//                        marker.map = naverMap
+                        clusterer.map = naverMap
 
                     }
 
@@ -91,9 +104,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 }
             })
 
-            val marker = Marker()
-            marker.position = LatLng(37.5670135, 126.9783740)
-            marker.map = naverMap
 
         }
 }
