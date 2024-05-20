@@ -56,7 +56,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             val cameraUpdate = CameraUpdate.scrollTo(LatLng(35.8247083, 127.147528))
             naverMap.moveCamera(cameraUpdate)
 
-
             // 마커 띄우는 곳!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             val marker = Marker()
 
