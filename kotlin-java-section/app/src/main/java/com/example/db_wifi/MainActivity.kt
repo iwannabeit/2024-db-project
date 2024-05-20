@@ -50,6 +50,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     }
         override fun onMapReady(naverMap: NaverMap) {
+
+            ///////////////////선빈 작업 구간////////////////////////////////////////////////////////
             //전주 시청으로 카메라 시점 시작
             val cameraUpdate = CameraUpdate.scrollTo(LatLng(35.8247083, 127.147528))
             naverMap.moveCamera(cameraUpdate)
@@ -103,6 +105,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     Log.v("디버깅중", "실패!!!!!")
                 }
             })
+            ///////////////////////선빈 부분 ///////////////////////////////////
 
 
         }
