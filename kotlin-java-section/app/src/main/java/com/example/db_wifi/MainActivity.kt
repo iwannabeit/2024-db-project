@@ -9,7 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.naver.maps.geometry.LatLng
-import com.naver.maps.map.CameraUpdate
+//import com.naver.maps.map.CameraUpdate
 import com.naver.maps.map.MapFragment
 import com.naver.maps.map.NaverMap
 import com.naver.maps.map.NaverMapSdk
@@ -53,8 +53,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
             ///////////////////선빈 작업 구간////////////////////////////////////////////////////////
             //전주 시청으로 카메라 시점 시작
-            val cameraUpdate = CameraUpdate.scrollTo(LatLng(35.8247083, 127.147528))
-            naverMap.moveCamera(cameraUpdate)
+//            val cameraUpdate = CameraUpdate.scrollTo(LatLng(35.8247083, 127.147528))
+//            naverMap.moveCamera(cameraUpdate)
 
             // 마커 띄우는 곳!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             val marker = Marker()
