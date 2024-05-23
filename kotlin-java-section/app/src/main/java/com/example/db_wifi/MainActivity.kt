@@ -43,7 +43,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
     private var naverMapInfo: List<NaverMapData>? = null
     private var naverMapList: NaverMapItem? = null
-  
+
     private var clusterer: Clusterer<ItemKey> = Clusterer.Builder<ItemKey>().screenDistance(20.0).build()
 
     // FusedLocationProviderClient는 manifest에서 위치권한 얻은 후 사용할 수 있습니다!
@@ -148,18 +148,18 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
         markerInfoText.text = markerInfo // 슬라이딩 드로어에 마커 정보 설정
         drawerLayout.openDrawer(GravityCompat.START) // 슬라이딩 드로어 열기
     }
-        override fun onMapReady(naverMap: NaverMap) {
-            this.naverMap = naverMap // naverMap 변수 초기화
+    override fun onMapReady(naverMap: NaverMap) {
+        this.naverMap = naverMap // naverMap 변수 초기화
 
-            ///////////////////선빈 작업 구간////////////////////////////////////////////////////////
-            //전주 시청으로 카메라 시점 시작
+        ///////////////////선빈 작업 구간////////////////////////////////////////////////////////
+        //전주 시청으로 카메라 시점 시작
 //            val cameraUpdate = CameraUpdate.scrollTo(LatLng(35.8247083, 127.147528))
 //            naverMap.moveCamera(cameraUpdate)
 
-            // 마커 띄우는 곳!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            val s_marker = Marker()
+        // 마커 띄우는 곳!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        val s_marker = Marker()
 
-            val markerList = mutableListOf<Marker>() // 마커 리스트 생성
+        val markerList = mutableListOf<Marker>() // 마커 리스트 생성
 //            // 마커 생성
 //            val marker1 = Marker()
 //            marker1.position = LatLng(35.84033355929488, 127.13602285329539)
@@ -207,62 +207,62 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 //                    true
 //                }
 //            }
-            
 
 
-            //클라이언트 객체 생성
-            val naverMapApiInterface = NaverMapRequest.getClient().create(NaverMapApiInterface::class.java)
 
-            //응답 받을 콜백 구현
+        //클라이언트 객체 생성
+        val naverMapApiInterface = NaverMapRequest.getClient().create(NaverMapApiInterface::class.java)
+
+        //응답 받을 콜백 구현
 //            val call = naverMapApiInterface.getNaverMapData()
-            val call: Call<NaverMapItem> = naverMapApiInterface.getMapData()
+        val call: Call<NaverMapItem> = naverMapApiInterface.getMapData()
 
-            Log.v("Debug중","디버그중입니다.")
+        Log.v("Debug중","디버그중입니다.")
 
-            //클라이언트 객체가 제공하는 enqueue로 통신에 대한 요청, 응답 처리 방법 명시
-            call.enqueue(object : Callback<NaverMapItem> {
-                override fun onResponse(call: Call<NaverMapItem>, response: Response<NaverMapItem>) {
-                    if(response.isSuccessful){
-                        Log.v("디버깅중", "성공!!!!!")
-                        naverMapList = response.body()
-                        naverMapInfo = naverMapList?.jjwifi
+        //클라이언트 객체가 제공하는 enqueue로 통신에 대한 요청, 응답 처리 방법 명시
+        call.enqueue(object : Callback<NaverMapItem> {
+            override fun onResponse(call: Call<NaverMapItem>, response: Response<NaverMapItem>) {
+                if(response.isSuccessful){
+                    Log.v("디버깅중", "성공!!!!!")
+                    naverMapList = response.body()
+                    naverMapInfo = naverMapList?.jjwifi
 
 
 //                        Toast.makeText(this@MainActivity, naverMapInfo?.get(1)?.address, Toast.LENGTH_LONG).show()
 
-                        naverMapInfo?.let{
-                            for(i in 0 until it.size){
+                    naverMapInfo?.let{
+                        for(i in 0 until it.size){
 //                                val markers = arrayOfNulls<Marker>(it.size)
 
 //                                val marker = markers[i]
-                                val lat = it.get(i).y
-                                val lnt = it.get(i).x
+                            val lat = it.get(i).y
+                            val lnt = it.get(i).x
 
-                                s_marker.position = LatLng(lat, lnt)
-                                //클러스터링
-                                clusterer.add(ItemKey(i, LatLng(it.get(i).y, it.get(i).x)), null)
+                            s_marker.position = LatLng(lat, lnt)
+                            //클러스터링
+                            clusterer.add(ItemKey(i, LatLng(it.get(i).y, it.get(i).x)), null)
 
-                            }
                         }
-//                        marker.map = naverMap
-                        clusterer.map = naverMap
-
                     }
+//                        marker.map = naverMap
+                    clusterer.map = naverMap
 
                 }
-                override fun onFailure(call: Call<NaverMapItem>, t: Throwable) {
-                    // 통신 실패 시 처리할 코드
-                    Log.v("디버깅중", "실패!!!!!")
-                }
-            })
-            ///////////////////////선빈 부분 ///////////////////////////////////
+
+            }
+            override fun onFailure(call: Call<NaverMapItem>, t: Throwable) {
+                // 통신 실패 시 처리할 코드
+                Log.v("디버깅중", "실패!!!!!")
+            }
+        })
+        ///////////////////////선빈 부분 ///////////////////////////////////
 
 
-            naverMap.locationSource = locationSource // 기존에 설정된 위치 소스 초기화
-            naverMap.locationTrackingMode = LocationTrackingMode.Follow // 위치 추적 모드를 Follow로 설정
-            naverMap.uiSettings.isLocationButtonEnabled = true // 현위치 버튼
+        naverMap.locationSource = locationSource // 기존에 설정된 위치 소스 초기화
+        naverMap.locationTrackingMode = LocationTrackingMode.Follow // 위치 추적 모드를 Follow로 설정
+        naverMap.uiSettings.isLocationButtonEnabled = true // 현위치 버튼
 
-            //실내지도 활성화
+        //실내지도 활성화
 //        naverMap.isIndoorEnabled = true
 //        naverMap.uiSettings.isIndoorLevelPickerEnabled = true // 실내지도 층 버튼
 //
@@ -286,7 +286,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 //            }
 
 
-        }
+    }
     //    companion object {
 //        private const val LOCATION_PERMISSION_REQUEST_CODE = 100
 //    }
