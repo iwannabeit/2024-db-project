@@ -148,53 +148,53 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
 
             val markerList = mutableListOf<Marker>() // 마커 리스트 생성
-            // 마커 생성
-            val marker1 = Marker()
-            marker1.position = LatLng(35.84033355929488, 127.13602285329539)
-            val marker2 = Marker()
-            marker2.position = LatLng(35.83918138324727,  127.12645770115124) // 새로운 위치에 대한 좌표 설정
-            val marker3 = Marker()
-            marker3.position = LatLng(35.845793223479376, 127.12963405065182)
-            // 마커 리스트에 추가
-            markerList.add(marker1)
-            markerList.add(marker2)
-            markerList.add(marker3)
-
-            for(marker in markerList){
-                marker.map = naverMap
-                marker.icon = MarkerIcons.BLACK
-                marker.iconTintColor = Color.RED // 마커 겉의 색깔
-                marker.captionText = "${marker.position.latitude}" // 마크에 글자 설정
-                marker.setCaptionAligns(Align.Top) // 글자를 위로
-                marker.captionTextSize = 15.04f // 텍스트 사이즈
-                marker.captionOffset = 30 // 마크과 글자 사이 간격
-
-                // 특정 줌 에서만 마크와 글자가 보임
-//                marker.captionMinZoom = 12.0
-//                marker.captionMaxZoom = 16.0
-//                marker.minZoom = 12.0
-//                marker.maxZoom = 16.0
-
-//                marker.isHideCollidedMarkers = true // 마커 겹쳐지면 합치기
-
-                marker.width = Marker.SIZE_AUTO // 정수 입력해서 변환 가능
-                marker.height = Marker.SIZE_AUTO
-//              marker.anchor = PointF(100f, 1f) // 마커를 해당지점보다 왼쪽으로, 위쪽으로 떨어지게 만들기
-
-
-                // marker1에 대한 정보 저장
-                val marker1Info = "위도: ${marker.position.latitude}, 경도: ${marker.position.longitude}"
-                marker.tag = marker1Info // 마커 태그에 정보 입력
-
-                // 마커를 클릭했을 때의 동작 설정
-                marker.setOnClickListener {
-                    val markerInfo = it.tag as? String // 마커태그에 저장된 정보 가져오기
-                    markerInfo?.let { info ->
-                        openDrawerWithMarkerInfo(info) // 마커에 대한 정보를 슬라이딩 드로어에 표시(info를 매개변수로한 위에 정의한 함수 가져오기)
-                    }
-                    true
-                }
-            }
+//            // 마커 생성
+//            val marker1 = Marker()
+//            marker1.position = LatLng(35.84033355929488, 127.13602285329539)
+//            val marker2 = Marker()
+//            marker2.position = LatLng(35.83918138324727,  127.12645770115124) // 새로운 위치에 대한 좌표 설정
+//            val marker3 = Marker()
+//            marker3.position = LatLng(35.845793223479376, 127.12963405065182)
+//            // 마커 리스트에 추가
+//            markerList.add(marker1)
+//            markerList.add(marker2)
+//            markerList.add(marker3)
+//
+//            for(marker in markerList){
+//                marker.map = naverMap
+//                marker.icon = MarkerIcons.BLACK
+//                marker.iconTintColor = Color.RED // 마커 겉의 색깔
+//                marker.captionText = "${marker.position.latitude}" // 마크에 글자 설정
+//                marker.setCaptionAligns(Align.Top) // 글자를 위로
+//                marker.captionTextSize = 15.04f // 텍스트 사이즈
+//                marker.captionOffset = 30 // 마크과 글자 사이 간격
+//
+//                // 특정 줌 에서만 마크와 글자가 보임
+////                marker.captionMinZoom = 12.0
+////                marker.captionMaxZoom = 16.0
+////                marker.minZoom = 12.0
+////                marker.maxZoom = 16.0
+//
+////                marker.isHideCollidedMarkers = true // 마커 겹쳐지면 합치기
+//
+//                marker.width = Marker.SIZE_AUTO // 정수 입력해서 변환 가능
+//                marker.height = Marker.SIZE_AUTO
+////              marker.anchor = PointF(100f, 1f) // 마커를 해당지점보다 왼쪽으로, 위쪽으로 떨어지게 만들기
+//
+//
+//                // marker1에 대한 정보 저장
+//                val marker1Info = "위도: ${marker.position.latitude}, 경도: ${marker.position.longitude}"
+//                marker.tag = marker1Info // 마커 태그에 정보 입력
+//
+//                // 마커를 클릭했을 때의 동작 설정
+//                marker.setOnClickListener {
+//                    val markerInfo = it.tag as? String // 마커태그에 저장된 정보 가져오기
+//                    markerInfo?.let { info ->
+//                        openDrawerWithMarkerInfo(info) // 마커에 대한 정보를 슬라이딩 드로어에 표시(info를 매개변수로한 위에 정의한 함수 가져오기)
+//                    }
+//                    true
+//                }
+//            }
             
 
 
