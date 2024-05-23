@@ -11,6 +11,9 @@
             </handle>
           </Target>
         </DropdownSelection>
+<<<<<<< HEAD
+        <DialogSelection />
+=======
         <DialogSelection>
           <targets>
             <Target type="DEFAULT_BOOT">
@@ -20,6 +23,7 @@
             </Target>
           </targets>
         </DialogSelection>
+>>>>>>> b782769ae4935fbf28d3a52d8e8ced53f666cd7a
       </SelectionState>
     </selectionStates>
   </component>

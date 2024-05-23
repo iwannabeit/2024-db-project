@@ -27,6 +27,7 @@ import com.naver.maps.map.MapFragment
 import com.naver.maps.map.NaverMap
 import com.naver.maps.map.NaverMapSdk
 import com.naver.maps.map.OnMapReadyCallback
+import com.naver.maps.map.clustering.Clusterer
 import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.util.FusedLocationSource
 import retrofit2.Call
@@ -37,10 +38,13 @@ import android.Manifest
 import android.graphics.PointF
 import com.naver.maps.map.overlay.Align
 
-
+//import com.naver.maps.map.CameraUpdate
 class MainActivity : FragmentActivity(), OnMapReadyCallback {
+
     private var naverMapInfo: List<NaverMapData>? = null
     private var naverMapList: NaverMapItem? = null
+  
+    private var clusterer: Clusterer<ItemKey> = Clusterer.Builder<ItemKey>().screenDistance(20.0).build()
 
     // FusedLocationProviderClient는 manifest에서 위치권한 얻은 후 사용할 수 있습니다!
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -66,6 +70,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
         }
 
     @SuppressLint("MissingInflatedId")
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -103,8 +108,8 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 //        }
     }
 
-
-    private fun checkLocationPermission() { // 권한 확인 함수
+    private fun checkLocationPermission() {
+        // 권한 확인 함수
         when {
             ContextCompat.checkSelfPermission( // 권한이 부여되어있는지 확인하는 메소드
                 this, // 현재 액티비티에서
@@ -146,6 +151,13 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
         override fun onMapReady(naverMap: NaverMap) {
             this.naverMap = naverMap // naverMap 변수 초기화
 
+            ///////////////////선빈 작업 구간////////////////////////////////////////////////////////
+            //전주 시청으로 카메라 시점 시작
+//            val cameraUpdate = CameraUpdate.scrollTo(LatLng(35.8247083, 127.147528))
+//            naverMap.moveCamera(cameraUpdate)
+
+            // 마커 띄우는 곳!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            val s_marker = Marker()
 
             val markerList = mutableListOf<Marker>() // 마커 리스트 생성
 //            // 마커 생성
@@ -198,7 +210,6 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
             
 
 
-
             //클라이언트 객체 생성
             val naverMapApiInterface = NaverMapRequest.getClient().create(NaverMapApiInterface::class.java)
 
@@ -216,7 +227,25 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                         naverMapList = response.body()
                         naverMapInfo = naverMapList?.jjwifi
 
-                        Toast.makeText(this@MainActivity, naverMapInfo?.get(1)?.address, Toast.LENGTH_LONG).show()
+
+//                        Toast.makeText(this@MainActivity, naverMapInfo?.get(1)?.address, Toast.LENGTH_LONG).show()
+
+                        naverMapInfo?.let{
+                            for(i in 0 until it.size){
+//                                val markers = arrayOfNulls<Marker>(it.size)
+
+//                                val marker = markers[i]
+                                val lat = it.get(i).y
+                                val lnt = it.get(i).x
+
+                                s_marker.position = LatLng(lat, lnt)
+                                //클러스터링
+                                clusterer.add(ItemKey(i, LatLng(it.get(i).y, it.get(i).x)), null)
+
+                            }
+                        }
+//                        marker.map = naverMap
+                        clusterer.map = naverMap
 
                     }
 
@@ -226,6 +255,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                     Log.v("디버깅중", "실패!!!!!")
                 }
             })
+            ///////////////////////선빈 부분 ///////////////////////////////////
 
 
             naverMap.locationSource = locationSource // 기존에 설정된 위치 소스 초기화
@@ -254,6 +284,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 //                openDrawerWithMarkerInfo(positionString) // 마커에 대한 정보를 슬라이딩 드로어에 표시
 //                true
 //            }
+
 
         }
     //    companion object {
