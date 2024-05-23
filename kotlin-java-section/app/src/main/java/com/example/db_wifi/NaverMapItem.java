@@ -5,6 +5,6 @@ import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
 public class NaverMapItem {
-    @SerializedName("jwifi")
+    @SerializedName("jjwifi")
     public List<NaverMapData> jjwifi;
 }

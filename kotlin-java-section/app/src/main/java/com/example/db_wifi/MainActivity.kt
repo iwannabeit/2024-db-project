@@ -35,7 +35,8 @@ import retrofit2.Callback
 import retrofit2.Response
 import com.naver.maps.map.util.MarkerIcons
 import android.Manifest
-
+import android.graphics.PointF
+import com.naver.maps.map.overlay.Align
 
 //import com.naver.maps.map.CameraUpdate
 class MainActivity : FragmentActivity(), OnMapReadyCallback {
@@ -47,7 +48,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
     // FusedLocationProviderClient는 manifest에서 위치권한 얻은 후 사용할 수 있습니다!
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private lateinit var locationSource: FusedLocationSource
+    private lateinit var locationSource: FusedLocationSource // 위치관련 클래스(타입)
 
     //위치 권한 요청을 위한 코드
     private val LOCATION_PERMISSION_REQUEST_CODE: Int = 1000
@@ -61,7 +62,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
                 // 권한이 허용되었을 때 위치 정보 요청
-                requestLocationUpdates()
+                requestLocationUpdates() // 현재위치 불러오는 함수
             } else {
                 // 권한이 거부되었을 때 메시지 표시
                 Toast.makeText(this, "위치 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
@@ -78,7 +79,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         // 위치 권한 확인
-        checkLocationPermission()
+        checkLocationPermission()// 권한 확인 함수
 
         NaverMapSdk.getInstance(this).client =
             NaverMapSdk.NaverCloudPlatformClient("f5wddcflyd")
@@ -90,10 +91,12 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
             }
         mapFragment.getMapAsync(this)
 
-        drawerLayout = findViewById(R.id.main)
-        markerInfoText = findViewById(R.id.marker_info_text)
+        // activity_main.xml의 해당 영역을 조작하거나 업데이트 하기위해 불러온 것
+        drawerLayout = findViewById(R.id.main) // 배경 영역 선택
+        markerInfoText = findViewById(R.id.marker_info_text) // 슬라이딩 드로어 영역 선택
 
-        //
+        // 위치 권한이 허용되었는지 확인하고, 그렇지 않은 경우 사용자에게 권한을 요청하는 데 사용되는 객체를 생성
+        // 사용자가 권한을 부여하면 해당 위치 정보를 사용
         locationSource = FusedLocationSource(this, LOCATION_PERMISSION_REQUEST_CODE)
 
 
@@ -106,16 +109,16 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
     }
 
     private fun checkLocationPermission() {
+        // 권한 확인 함수
         when {
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                // 권한이 이미 허용되어 있으면 위치 정보 요청
-                requestLocationUpdates()
+            ContextCompat.checkSelfPermission( // 권한이 부여되어있는지 확인하는 메소드
+                this, // 현재 액티비티에서
+                Manifest.permission.ACCESS_FINE_LOCATION // GPS접근 권한이 있는가
+            ) == PackageManager.PERMISSION_GRANTED -> { // 권한이 허락되었음을 알리는 함수, 위의 값과 동일하면 권한을 허락한 것
+                requestLocationUpdates() // 현재위치 불러오는 함수
             }
             else -> {
-                // 권한이 없을 경우 권한 요청
+                // 권한이 없을 경우 GPS 권한 요청
                 requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
             }
         }
@@ -133,8 +136,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                     "현재 위치: 위도 $latitude, 경도 $longitude",
                     Toast.LENGTH_LONG
                 ).show()
-            }
-            .addOnFailureListener { e ->
+            }.addOnFailureListener { e ->
                 // 위치 가져오기 실패시 처리
                 Toast.makeText(this, "위치 정보를 가져오는 데 실패했습니다.", Toast.LENGTH_SHORT).show()
                 Log.e("Location", "Failed to get location: ${e.message}")
@@ -156,6 +158,57 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
             // 마커 띄우는 곳!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             val s_marker = Marker()
+
+            val markerList = mutableListOf<Marker>() // 마커 리스트 생성
+            // 마커 생성
+            val marker1 = Marker()
+            marker1.position = LatLng(35.84033355929488, 127.13602285329539)
+            val marker2 = Marker()
+            marker2.position = LatLng(35.83918138324727,  127.12645770115124) // 새로운 위치에 대한 좌표 설정
+            val marker3 = Marker()
+            marker3.position = LatLng(35.845793223479376, 127.12963405065182)
+            // 마커 리스트에 추가
+            markerList.add(marker1)
+            markerList.add(marker2)
+            markerList.add(marker3)
+
+            for(marker in markerList){
+                marker.map = naverMap
+                marker.icon = MarkerIcons.BLACK
+                marker.iconTintColor = Color.RED // 마커 겉의 색깔
+                marker.captionText = "${marker.position.latitude}" // 마크에 글자 설정
+                marker.setCaptionAligns(Align.Top) // 글자를 위로
+                marker.captionTextSize = 15.04f // 텍스트 사이즈
+                marker.captionOffset = 30 // 마크과 글자 사이 간격
+
+                // 특정 줌 에서만 마크와 글자가 보임
+//                marker.captionMinZoom = 12.0
+//                marker.captionMaxZoom = 16.0
+//                marker.minZoom = 12.0
+//                marker.maxZoom = 16.0
+
+//                marker.isHideCollidedMarkers = true // 마커 겹쳐지면 합치기
+
+                marker.width = Marker.SIZE_AUTO // 정수 입력해서 변환 가능
+                marker.height = Marker.SIZE_AUTO
+//              marker.anchor = PointF(100f, 1f) // 마커를 해당지점보다 왼쪽으로, 위쪽으로 떨어지게 만들기
+
+
+                // marker1에 대한 정보 저장
+                val marker1Info = "위도: ${marker.position.latitude}, 경도: ${marker.position.longitude}"
+                marker.tag = marker1Info // 마커 태그에 정보 입력
+
+                // 마커를 클릭했을 때의 동작 설정
+                marker.setOnClickListener {
+                    val markerInfo = it.tag as? String // 마커태그에 저장된 정보 가져오기
+                    markerInfo?.let { info ->
+                        openDrawerWithMarkerInfo(info) // 마커에 대한 정보를 슬라이딩 드로어에 표시(info를 매개변수로한 위에 정의한 함수 가져오기)
+                    }
+                    true
+                }
+            }
+            
+
 
             //클라이언트 객체 생성
             val naverMapApiInterface = NaverMapRequest.getClient().create(NaverMapApiInterface::class.java)
@@ -212,25 +265,25 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
             //실내지도 활성화
 //        naverMap.isIndoorEnabled = true
 //        naverMap.uiSettings.isIndoorLevelPickerEnabled = true // 실내지도 층 버튼
-
-            // 마커를 클릭했을 때의 동작 설정
-            val marker = Marker()
-            marker.position = LatLng(37.5670135, 126.9783740)
-            marker.map = naverMap
-            marker.icon = MarkerIcons.BLACK
-            marker.iconTintColor = Color.RED
-            marker.width = Marker.SIZE_AUTO
-            marker.height = Marker.SIZE_AUTO
-            marker.setOnClickListener {
-                val cameraPosition = naverMap.cameraPosition
-
-                val latitudeString = cameraPosition.target.latitude.toString() // 위도를 문자열로 변환
-                val longitudeString = cameraPosition.target.longitude.toString() // 경도를 문자열로 변환
-                val positionString : String = "$latitudeString $longitudeString" // 위도와 경도를 합쳐서 위치를 나타내는 문자열 생성
-
-                openDrawerWithMarkerInfo(positionString) // 마커에 대한 정보를 슬라이딩 드로어에 표시
-                true
-            }
+//
+//            // 마커를 클릭했을 때의 동작 설정
+//            val marker = Marker()
+//            marker.position = LatLng(35.83430784590786, 127.13271435616436)
+//            marker.map = naverMap
+//            marker.icon = MarkerIcons.BLACK
+//            marker.iconTintColor = Color.RED
+//            marker.width = Marker.SIZE_AUTO
+//            marker.height = Marker.SIZE_AUTO
+//            marker.setOnClickListener {
+//                val cameraPosition = naverMap.cameraPosition
+//
+//                val latitudeString = cameraPosition.target.latitude.toString() // 위도를 문자열로 변환
+//                val longitudeString = cameraPosition.target.longitude.toString() // 경도를 문자열로 변환
+//                val positionString : String = "$latitudeString $longitudeString" // 위도와 경도를 합쳐서 위치를 나타내는 문자열 생성
+//
+//                openDrawerWithMarkerInfo(positionString) // 마커에 대한 정보를 슬라이딩 드로어에 표시
+//                true
+//            }
 
 
         }
