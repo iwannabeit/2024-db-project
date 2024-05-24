@@ -4,7 +4,7 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2024-05-15T15:05:18.138672600Z">
+        <DropdownSelection timestamp="2024-05-23T03:17:04.408434Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="PhysicalDevice" identifier="serial=R5CT82A8M1A" />
@@ -15,10 +15,10 @@
       </SelectionState>
       <SelectionState runConfigName="MainActivity">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2024-05-14T11:57:02.445591200Z">
+        <DropdownSelection timestamp="2024-05-16T15:02:27.163686300Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\oggps\.android\avd\Pixel_7a_API_30.avd" />
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=R5CT82A8M1A" />
             </handle>
           </Target>
         </DropdownSelection>
