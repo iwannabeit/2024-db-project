@@ -63,6 +63,8 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
     private lateinit var naverMap: NaverMap
 
+    private var currentLatLng : LatLng? = null
+
     private lateinit var markerInfoText: TextView
     private lateinit var search_loadBtn : Button
     private lateinit var scaleBtn : Button
@@ -132,40 +134,40 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
 
     // 현재위치의 LatLng값을 얻어오는 함수입니다. 필요시 사용하세요! (currentLatLng이 이름으로 변수 선언 후 사용하시면 됩니다)
-//    private fun fetchCurrentLocation() {
-//        if (ActivityCompat.checkSelfPermission(
-//                this,
-//                Manifest.permission.ACCESS_FINE_LOCATION
-//            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-//                this,
-//                Manifest.permission.ACCESS_COARSE_LOCATION
-//            ) != PackageManager.PERMISSION_GRANTED
-//        ) {
-//            // TODO: Consider calling
-//            //    ActivityCompat#requestPermissions
-//            // here to request the missing permissions, and then overriding
-//            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-//            //                                          int[] grantResults)
-//            // to handle the case where the user grants the permission. See the documentation
-//            // for ActivityCompat#requestPermissions for more details.
-//            return
-//        }
-//        fusedLocationClient.lastLocation
-//            .addOnSuccessListener { location: Location? ->
-//                location?.let {
-//                    // 위치 정보를 가져오면 LatLng 객체로 변환
-//                    currentLatLng = LatLng(it.latitude, it.longitude)
-//                    // 여기서 currentLatLng을 사용하여 작업을 수행할 수 있습니다.
-//                    // 예를 들어, 현재 위치를 사용하여 네이버 지도에 마커를 추가하거나 경로를 그릴 수 있습니다.
-//                } ?: run {
-//                    Toast.makeText(this, "위치 정보를 가져오지 못했습니다.", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//            .addOnFailureListener { e ->
-//                Toast.makeText(this, "위치 정보를 가져오는 데 실패했습니다.", Toast.LENGTH_SHORT).show()
-//                e.printStackTrace()
-//            }
-//    }
+    private fun fetchCurrentLocation() {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return
+        }
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location: Location? ->
+                location?.let {
+                    // 위치 정보를 가져오면 LatLng 객체로 변환
+                    currentLatLng = LatLng(it.latitude, it.longitude)
+                    // 여기서 currentLatLng을 사용하여 작업을 수행할 수 있습니다.
+
+                } ?: run {
+                    Toast.makeText(this, "위치 정보를 가져오지 못했습니다.", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "위치 정보를 가져오는 데 실패했습니다.", Toast.LENGTH_SHORT).show()
+                e.printStackTrace()
+            }
+    }
     private fun checkLocationPermission() {
         when {
             ContextCompat.checkSelfPermission(
@@ -375,9 +377,15 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
             removeCircle()
         }
         search_loadBtn.setOnClickListener{
-//                fetchCurrentLocation()
-            openNaverMapAppForDirections()
-//                Toast.makeText(this, "길찾기", Toast.LENGTH_SHORT).show()
+                fetchCurrentLocation()
+//            openNaverMapAppForDirections()
+//            Toast.makeText(this, "길찾기", Toast.LENGTH_SHORT).show()
+            // 추가 부분(테스트 용)
+            val latitude = currentLatLng?.latitude ?: 0.0
+            val longitude = currentLatLng?.longitude ?: 0.0
+            val positionString = "Latitude: $latitude, Longitude: $longitude"
+            Toast.makeText(this, positionString, Toast.LENGTH_SHORT).show()
+            //여기까지가 추가 부분
         }
     }
     //    companion object {
