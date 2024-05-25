@@ -1,37 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout  xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <FrameLayout
-        android:id="@+id/map"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-
-    <!-- 슬라이딩 드로어 영역 -->
     <LinearLayout
-        android:id="@+id/nav_drawer"
+        android:id="@+id/header"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:layout_gravity="start"
+        android:layout_height="70dp"
         android:gravity="center"
-        android:background="@android:color/white"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:orientation="horizontal"
+        android:background="@android:color/white">
 
-        <!-- 슬라이딩 드로어에 표시될 내용 -->
         <TextView
-            android:id="@+id/marker_info_text"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Marker Information"
-            android:textSize="16sp"
-            android:textStyle="bold"/>
+            android:layout_gravity="center"
+            android:text="db-wifi"
+            android:textSize="30sp" />
     </LinearLayout>
 
-</androidx.drawerlayout.widget.DrawerLayout>
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/main_drawer">
+
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/map"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:name="com.naver.maps.map.MapFragment" />
+
+        <!-- Bottom Sheet 영역 -->
+        <LinearLayout
+            android:id="@+id/bottom_sheet"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:background="@android:color/white"
+            android:orientation="vertical"
+            android:padding="16dp"
+            app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+            <!--            android:id="@+id/nav_drawer"-->
+            <!--            android:layout_width="match_parent"-->
+            <!--            android:layout_height="200dp"-->
+            <!--            android:layout_gravity="end"-->
+            <!--            android:gravity="center"-->
+            <!--            android:background="@android:color/white"-->
+            <!--            android:orientation="vertical"-->
+            <!--            android:padding="16dp"-->
+            <!--            android:visibility="gone">-->
+
+
+            <!-- 슬라이딩 드로어에 표시될 내용 -->
+            <TextView
+                android:id="@+id/marker_info_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Marker Information"
+                android:textSize="16sp"
+                android:textStyle="bold"/>
+            <Button
+                android:id="@+id/scaleBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="범위 보기"/>
+            <Button
+                android:id="@+id/non_scaleBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="범위 없애기"/>
+            <Button
+                android:id="@+id/search_loadBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="길찾기" />
+
+        </LinearLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+</LinearLayout>
