@@ -3,21 +3,13 @@ package com.example.db_wifi
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.health.connect.datatypes.units.Length
 import android.os.Bundle
 import android.util.Log
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.UiThread
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.core.location.LocationManagerCompat.requestLocationUpdates
-import androidx.core.view.GravityCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.FragmentActivity
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -35,15 +27,15 @@ import retrofit2.Callback
 import retrofit2.Response
 import com.naver.maps.map.util.MarkerIcons
 import android.Manifest
-import android.graphics.PointF
 import android.location.Location
 import android.widget.Button
 import android.widget.LinearLayout
 import androidx.core.app.ActivityCompat
+import com.example.db_wifi.NaverAPI
+import com.example.db_wifi.ResultPath
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.naver.maps.map.CameraAnimation
 import com.naver.maps.map.CameraUpdate
-import com.naver.maps.map.overlay.Align
 import com.naver.maps.map.overlay.CircleOverlay
 import com.naver.maps.map.overlay.PathOverlay
 import com.naver.maps.map.overlay.PolygonOverlay
@@ -75,18 +67,19 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
     private var latitudeString : String? = null
     private var longitudeString : String? = null
     private lateinit var targetPostion : LatLng
+    private var currentLatLng : LatLng? = null
+    private var currentLatitude :Double = 0.0
+    private var currentLongitude :Double = 0.0
 
     private var currentLocation: LatLng? = null
     private var selectedMarker: Marker? = null
-
-
 
     // 위치 권한 요청
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
                 // 권한이 허용되었을 때 위치 정보 요청
-                requestLocationUpdates() // 현재위치 불러오는 함수
+                //requestLocationUpdates()
             } else {
                 // 권한이 거부되었을 때 메시지 표시
                 Toast.makeText(this, "위치 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
@@ -101,16 +94,12 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
         .build()
 
     @SuppressLint("MissingInflatedId")
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         // FusedLocationProviderClient 초기화
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
-        // 위치 권한이 허용되었는지 확인하고, 그렇지 않은 경우 사용자에게 권한을 요청하는 데 사용되는 객체를 생성
-        // 사용자가 권한을 부여하면 해당 위치 정보를 사용
         locationSource = FusedLocationSource(this, LOCATION_PERMISSION_REQUEST_CODE)
 
         // 위치 권한 확인
@@ -123,8 +112,8 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
         val mapFragment = fm.findFragmentById(R.id.map) as MapFragment?
             ?: MapFragment.newInstance().also {
                 fm.beginTransaction().add(R.id.map, it).commit()
-            } // 지도 나타내기
-        mapFragment.getMapAsync(this) // 지도가 준비되었을 때 호출될 메서드 -> onMapReady 대기
+            }
+        mapFragment.getMapAsync(this)
 
 
         // Bottom Sheet 초기화
@@ -134,6 +123,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
         search_loadBtn = findViewById(R.id.search_loadBtn)
         scaleBtn = findViewById(R.id.scaleBtn)
         non_scaleBtn = findViewById(R.id.non_scaleBtn)
+
 
 
 
@@ -168,7 +158,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
             .addOnSuccessListener { location: Location? ->
                 location?.let {
                     // 위치 정보를 가져오면 LatLng 객체로 변환
-                    var currentLatLng = LatLng(it.latitude, it.longitude)
+                    currentLatLng = LatLng(it.latitude, it.longitude)
                     // 여기서 currentLatLng을 사용하여 작업을 수행할 수 있습니다.
                     // 예를 들어, 현재 위치를 사용하여 네이버 지도에 마커를 추가하거나 경로를 그릴 수 있습니다.
                 } ?: run {
@@ -211,7 +201,8 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                     "현재 위치: 위도 $latitude, 경도 $longitude",
                     Toast.LENGTH_LONG
                 ).show()
-            }.addOnFailureListener { e ->
+            }
+            .addOnFailureListener { e ->
                 // 위치 가져오기 실패시 처리
                 Toast.makeText(this, "위치 정보를 가져오는 데 실패했습니다.", Toast.LENGTH_SHORT).show()
                 Log.e("Location", "Failed to get location: ${e.message}")
@@ -222,27 +213,6 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
     private fun openDrawerWithMarkerInfo(markerInfo: String) {
         markerInfoText.text = markerInfo // Bottom Sheet 영역에 마커 정보 설정
         bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
-    }
-
-    private lateinit var circle : CircleOverlay
-    private fun drawCircle(center: LatLng) {
-        circle = CircleOverlay().apply {
-            this.center = center
-            this.radius = 30.0
-            this.color = Color.argb(33, 0, 0, 255)
-            this.map = naverMap
-        }
-    }
-
-    // 원을 지도에서 제거하는 함수
-    private fun removeCircle() {
-        // 원이 null이 아니면 지도에서 제거
-        if (::circle.isInitialized) {
-            circle.map = null
-        } else {
-            // 원이 초기화되지 않았다면 로그를 출력
-            Log.d("MainActivity", "Circle is not initialized")
-        }
     }
 
     private fun openNaverMapAppForDirections(startLatitude: Double, startLongitude: Double) {
@@ -299,6 +269,30 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
     }
 
 
+    private lateinit var circle : CircleOverlay
+    private fun drawCircle(center: LatLng) {
+        circle = CircleOverlay().apply {
+            this.center = center
+            this.radius = 30.0
+            this.color = Color.argb(33, 0, 0, 255)
+            this.map = naverMap
+        }
+    }
+
+    // 원을 지도에서 제거하는 함수
+    private fun removeCircle() {
+        // 원이 null이 아니면 지도에서 제거
+        if (::circle.isInitialized) {
+            circle.map = null
+        } else {
+            // 원이 초기화되지 않았다면 로그를 출력
+            Log.d("MainActivity", "Circle is not initialized")
+        }
+    }
+
+
+
+
 
     override fun onMapReady(naverMap: NaverMap) {
         this.naverMap = naverMap // naverMap 변수 초기화
@@ -307,9 +301,12 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
         naverMap.locationSource = FusedLocationSource(this, 1000)
         naverMap.locationTrackingMode = LocationTrackingMode.Follow // 위치 추적 모드를 Follow로 설정
         naverMap.uiSettings.isLocationButtonEnabled = true // 현위치 버튼
-        
 
-        
+        // 현재 위치 위도, 경도 저장
+        fetchCurrentLocation()
+        currentLatitude = currentLatLng?.latitude ?: 0.0
+        currentLongitude = currentLatLng?.longitude ?: 0.0
+
         // 마커 띄우는 곳!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         val s_marker = Marker()
 
@@ -376,6 +373,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
         marker.minZoom = 13.0
 //            marker.maxZoom = 16.0
 
+
         val jeonjuBoundary = listOf(
             LatLng(35.893238, 127.000492), // 좌표1
             LatLng(35.902305, 127.133935), // 좌표2
@@ -414,6 +412,12 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
         }
         search_loadBtn.setOnClickListener{
             fetchCurrentLocation()
+            currentLatitude = currentLatLng?.latitude ?: 0.0
+            currentLongitude = currentLatLng?.longitude ?: 0.0
+            val positionString = "Latitude: $currentLatitude, Longitude: $currentLongitude"
+            Toast.makeText(this, positionString, Toast.LENGTH_SHORT).show()
+
+            //, currentLatitude, currentLongitude
             openNaverMapAppForDirections(35.840335812433025, 127.13602285714192)
                 Toast.makeText(this, "길찾기", Toast.LENGTH_SHORT).show()
         }
