@@ -27,6 +27,8 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdate
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.maps.android.clustering.ClusterItem
+import com.google.maps.android.clustering.ClusterManager
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.CameraAnimation
 import com.naver.maps.map.LocationTrackingMode
@@ -35,6 +37,7 @@ import com.naver.maps.map.NaverMap
 import com.naver.maps.map.NaverMapOptions
 import com.naver.maps.map.NaverMapSdk
 import com.naver.maps.map.OnMapReadyCallback
+import com.naver.maps.map.clustering.Clusterer
 import com.naver.maps.map.overlay.CircleOverlay
 import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.overlay.PathOverlay
@@ -79,6 +82,13 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
     private var currentLocation: LatLng? = null
     private var selectedMarker: Marker? = null
 
+    // 클러스터링 구조
+    private var clusterer: Clusterer<ItemKey> = Clusterer.Builder<ItemKey>()
+        .minZoom(5) // 클러스터링이 시작되는 최소 줌 레벨
+        .maxZoom(13) // 클러스터링이 끝나는 최대 줌 레벨
+        .screenDistance(50.0)
+        .build()
+
     // 위치 권한 요청
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -102,6 +112,9 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
         // 위치 권한 확인
         checkLocationPermission()
+
+        // 첫 fetchCurrentLocation() 실행 시, null로 들어가는 오류 때메 미리 실행
+        fetchCurrentLocation()
 
         NaverMapSdk.getInstance(this).client =
             NaverMapSdk.NaverCloudPlatformClient("f5wddcflyd")
@@ -252,11 +265,23 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
     private lateinit var circle : CircleOverlay
     private fun drawCircle(center: LatLng) {
-        circle = CircleOverlay().apply {
-            this.center = center
-            this.radius = 30.0
-            this.color = Color.argb(33, 0, 0, 255)
-            this.map = naverMap
+        if (::circle.isInitialized) {
+            //기존에 있던 범위 제거 후 생성
+            circle.map = null
+
+            circle = CircleOverlay().apply {
+                this.center = center
+                this.radius = 30.0
+                this.color = Color.argb(33, 0, 0, 255)
+                this.map = naverMap
+            }
+        } else {
+            circle = CircleOverlay().apply {
+                this.center = center
+                this.radius = 30.0
+                this.color = Color.argb(33, 0, 0, 255)
+                this.map = naverMap
+            }
         }
     }
 
@@ -268,8 +293,11 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
         } else {
             // 원이 초기화되지 않았다면 로그를 출력
             Log.d("MainActivity", "Circle is not initialized")
+            Toast.makeText(this, "선택된 범위가 없습니다", Toast.LENGTH_SHORT).show()
         }
     }
+
+
 
     override fun onMapReady(naverMap: NaverMap) {
         this.naverMap = naverMap // naverMap 변수 초기화
@@ -313,32 +341,70 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
         naverMap.uiSettings.isLocationButtonEnabled = true // 현위치 버튼
 
 
+// 좌표 리스트
+        val coordinates = listOf(
+            LatLng(35.8414219, 127.0748137),
+            LatLng(35.8424219, 127.0768137),
+            LatLng(35.8434219, 127.0778137)
+            // 필요한 만큼 LatLng 객체를 추가
+        )
 
-        // 마커를 클릭했을 때의 동작 설정
-        val marker = Marker()
-        marker.position = LatLng(35.8414219, 127.0758137)
-        marker.map = naverMap
-        marker.icon = MarkerIcons.BLACK
-        marker.iconTintColor = Color.RED
-        marker.width = Marker.SIZE_AUTO
-        marker.height = Marker.SIZE_AUTO
-        lateinit var markerPosition : LatLng
-        marker.setOnClickListener {
-            markerPosition = marker.position
-            targetPostion = markerPosition
+// 마커 리스트
+        val markers = mutableListOf<Marker>()
 
-            latitudeString = markerPosition.latitude.toString() // 위도를 문자열로 변환
-            longitudeString = markerPosition.longitude.toString() // 경도를 문자열로 변환
-            val positionString : String = "$latitudeString $longitudeString" // 위도와 경도를 합쳐서 위치를 나타내는 문자열 생성
+        var markerPosition : LatLng? = null
+// 마커 생성 및 지도에 추가
+        for (coordinate in coordinates) {
+            val marker = Marker().apply {
+                position = coordinate
+                map = naverMap
+                icon = MarkerIcons.BLACK
+                iconTintColor = Color.RED
+                width = Marker.SIZE_AUTO
+                height = Marker.SIZE_AUTO
+                alpha = 0.0F
+            }
 
-            openDrawerWithMarkerInfo(positionString) // 마커에 대한 정보를 슬라이딩 드로어에 표시
-            true
-        }
-        // 특정 줌 에서만 마크와 글자가 보임
-        marker.captionMinZoom = 13.0
+            // 마커 클릭 리스너 설정
+            marker.setOnClickListener {
+                markerPosition = marker.position
+                val latitudeString = markerPosition!!.latitude.toString() // 위도를 문자열로 변환
+                val longitudeString = markerPosition!!.longitude.toString() // 경도를 문자열로 변환
+                val positionString = "$latitudeString $longitudeString" // 위도와 경도를 합쳐서 위치를 나타내는 문자열 생성
+
+                // 테스트용 Toast출력
+//                Toast.makeText(this, positionString, Toast.LENGTH_SHORT).show()
+
+                openDrawerWithMarkerInfo(positionString) // 마커에 대한 정보를 슬라이딩 드로어에 표시
+                true
+            }
+            marker.captionMinZoom = 14.0
+            marker.minZoom = 14.0
 //            marker.captionMaxZoom = 16.0
-        marker.minZoom = 13.0
 //            marker.maxZoom = 16.0
+
+            // 마커 리스트에 추가
+            markers.add(marker)
+        }
+
+        clusterer.add(ItemKey(1, LatLng(35.8414219, 127.0748137)), null)
+        clusterer.add(ItemKey(2, LatLng(35.8424219, 127.0768137)), null)
+        clusterer.add(ItemKey(3, LatLng(35.8434219, 127.0778137)), null)
+
+        val keyTagMap = mapOf(
+            ItemKey(1, LatLng(35.8414219, 127.0748137)) to null,
+            ItemKey(2, LatLng(35.8424219, 127.0768137)) to null,
+            ItemKey(3, LatLng(35.8434219, 127.0778137)) to null,
+        )
+        clusterer.addAll(keyTagMap)
+
+        clusterer.map = naverMap
+
+
+
+
+
+
 
         val jeonjuBoundary = listOf(
             LatLng(35.893238, 127.000492), // 좌표1
@@ -369,9 +435,9 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
             polygon.map = if (zoomLevel >= 13) null else naverMap
         }
 
-        scaleBtn.setOnClickListener{
-            drawCircle(markerPosition)
 
+        scaleBtn.setOnClickListener{
+            markerPosition?.let { it1 -> drawCircle(it1) }
         }
         non_scaleBtn.setOnClickListener{
             removeCircle()
@@ -381,6 +447,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 //            openNaverMapAppForDirections()
 //            Toast.makeText(this, "길찾기", Toast.LENGTH_SHORT).show()
             // 추가 부분(테스트 용)
+            markerPosition
             val latitude = currentLatLng?.latitude ?: 0.0
             val longitude = currentLatLng?.longitude ?: 0.0
             val positionString = "Latitude: $latitude, Longitude: $longitude"
@@ -388,6 +455,10 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
             //여기까지가 추가 부분
         }
     }
+
+
+
+
     //    companion object {
 //        private const val LOCATION_PERMISSION_REQUEST_CODE = 100
 //    }
