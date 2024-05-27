@@ -24,9 +24,9 @@ import retrofit2.Response
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private var naverMapInfo: List<NaverMapData>? = null
     private var naverMapList: NaverMapItem? = null
-    private var clusterer: Clusterer<ItemKey> = Clusterer.Builder<ItemKey>().screenDistance(20.0).build()
+    private var clusterer: Clusterer<ItemKey> = Clusterer.Builder<ItemKey>().screenDistance(50.0).maxZoom(13).animate(true).build()
 
-//    val distance: Clusterer<ItemKey> = Clusterer.Builder<ItemKey>()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -103,7 +103,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     Log.v("디버깅중", "실패!!!!!")
                 }
             })
-
 
         }
 }
