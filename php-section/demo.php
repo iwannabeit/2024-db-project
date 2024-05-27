@@ -13,10 +13,6 @@ $conn = mysqli_connect($servername, $username, $password, $dbname);
 if (!$conn) {
   die("연결 실패: " . mysqli_connect_error());
 }
-<<<<<<< HEAD
-echo "연결 성공!";
-
-=======
 
 $sql = "SELECT DISTINCT * FROM jjwifi";
 $result = mysqli_query($conn, $sql);
@@ -41,5 +37,4 @@ if($result){
   echo $json;
 }
 
->>>>>>> 72a317c9f23ba9ff5447902602a3423956d32163
 ?>
