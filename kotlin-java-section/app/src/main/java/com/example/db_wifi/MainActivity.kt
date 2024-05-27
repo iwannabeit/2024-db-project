@@ -219,7 +219,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
     private fun openNaverMapAppForDirections(startLatitude: Double, startLongitude: Double, endLatitude: Double, endLongitude: Double) {
         // 길찾기 예시
         val APIKEY_ID = "tgoutvp62u"
-        val APIKEY = "sVfCuiLh1aK2gLTNqEPPn24P5r7gybDHLVEyVibx"
+        val APIKEY = "5G2F2i3pLlKwqmJDFH18gEBFGNM7M44GvTwm3s3M"
         //레트로핏 객체 생성
         val retrofit = Retrofit.Builder()
             .baseUrl("https://naveropenapi.apigw.ntruss.com/map-direction/")
