@@ -447,11 +447,16 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 //            openNaverMapAppForDirections()
 //            Toast.makeText(this, "길찾기", Toast.LENGTH_SHORT).show()
             // 추가 부분(테스트 용)
-            markerPosition
+            val latitude1 = markerPosition?.latitude ?: 0.0
+            val longitude1 = markerPosition?.longitude ?: 0.0
+            val positionString1 = "Latitude: $latitude1, Longitude: $longitude1"
+
             val latitude = currentLatLng?.latitude ?: 0.0
             val longitude = currentLatLng?.longitude ?: 0.0
             val positionString = "Latitude: $latitude, Longitude: $longitude"
-            Toast.makeText(this, positionString, Toast.LENGTH_SHORT).show()
+
+            val positionString2 = positionString1 + positionString
+            Toast.makeText(this, positionString2, Toast.LENGTH_SHORT).show()
             //여기까지가 추가 부분
         }
     }
