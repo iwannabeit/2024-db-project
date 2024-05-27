@@ -43,7 +43,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
     private var naverMapInfo: List<NaverMapData>? = null
     private var naverMapList: NaverMapItem? = null
   
-    private var clusterer: Clusterer<ItemKey> = Clusterer.Builder<ItemKey>().screenDistance(20.0).build()
+    private var clusterer: Clusterer<ItemKey> = Clusterer.Builder<ItemKey>().screenDistance(50.0).build()
 
     // FusedLocationProviderClient는 manifest에서 위치권한 얻은 후 사용할 수 있습니다!
     private lateinit var fusedLocationClient: FusedLocationProviderClient

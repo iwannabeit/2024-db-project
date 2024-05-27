@@ -14,7 +14,7 @@ if (!$conn) {
   die("연결 실패: " . mysqli_connect_error());
 }
 
-$sql = "SELECT DISTINCT * FROM jjwifi_inout WHERE side = 'outside'";
+$sql = "SELECT DISTINCT * FROM jjwifi_inout WHERE side = 'inside'";
 $result = mysqli_query($conn, $sql);
 $data = array();
 
