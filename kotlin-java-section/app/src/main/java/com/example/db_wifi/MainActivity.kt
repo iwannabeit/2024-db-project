@@ -216,6 +216,8 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
         bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
     }
 
+    private var path = PathOverlay() // 경로선을 나타내는 위한 오버레이
+
     private fun openNaverMapAppForDirections(startLatitude: Double, startLongitude: Double, endLatitude: Double, endLongitude: Double) {
         // 길찾기 예시
         val APIKEY_ID = "tgoutvp62u"
@@ -235,7 +237,6 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
             override fun onResponse(call: Call<ResultPath>, response: Response<ResultPath>) { // Response 객체를 통해 응답 데이터를 접근가능
                 val path_cords_list = response.body()?.route?.traoptimal // traoptimal = 실시간 최적경로 넣기
 
-                val path = PathOverlay() // 경로선을 나타내는 위한 오버레이
 
                 // 경로 넣어놓기 위한 공간, MutableList에 add 기능 쓰기 위해 더미 원소(0.1, 0.1) 하나 넣어둠
                 val path_container: MutableList<LatLng> = mutableListOf(LatLng(0.1, 0.1))
@@ -247,11 +248,29 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                         path_container.add(LatLng(path_cords_xy[1], path_cords_xy[0]))
                     }
                 }
+                // 새로운 PathOverlay 객체 생성
+                path.map = null
 
+                val newPath = PathOverlay()
+
+                if (path.map != null) {
+                    // 기존에 있던 길찾기 제거
+                    path.map = null
+                    Toast.makeText(this@MainActivity, "경ss.", Toast.LENGTH_SHORT).show()
+
+                }
+
+// 새로운 경로 그리기
                 //더미원소(0.1,0.1) 드랍후 path.coords에 path들을 넣어줌.
-                path.coords = path_container.drop(1)
-                path.color = Color.GREEN
-                path.map = naverMap // 경로선 그리기
+                newPath.coords = path_container.drop(1)
+                newPath.color = Color.GREEN
+                newPath.map = naverMap // 경로선 그리기
+
+// 이후 path를 새로운 객체로 갱신
+
+                path = newPath
+
+
 
                 //경로 시작점으로 화면 이동
                 if (path.coords.isNotEmpty()) {
@@ -315,17 +334,12 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
         // 현재 위치 위도, 경도 저장
         fetchCurrentLocation()
-//        currentLatitude = currentLatLng?.latitude ?: 0.0
-//        currentLongitude = currentLatLng?.longitude ?: 0.0
-
 
         // 마커 띄우는 곳!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        val s_marker = Marker()
 
         val coordinates = mutableListOf<LatLng>()
         var markerPosition : LatLng? = null
-        val placeCoordinates = mutableListOf<String>()
-
+        val c_marker = Marker()
 
         //클라이언트 객체 생성
         val naverMapApiInterface = NaverMapRequest.getClient().create(NaverMapApiInterface::class.java)
@@ -347,57 +361,37 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
                             val lat = it.get(i).y
                             val lnt = it.get(i).x
-
+                            val s_marker = Marker()
                             // 장소이름 저장
+
                             var s_place = it.get(i).place.toString()
-                            placeCoordinates.add(s_place)
 
                             s_marker.position = LatLng(lat, lnt)
                             coordinates.add(LatLng(lat, lnt)) // 좌표저장
+                            s_marker.map = naverMap
 
-//                            marker.map = naverMap
+                            s_marker.icon = MarkerIcons.BLACK
+                            s_marker.iconTintColor = Color.RED
+                            s_marker.width = Marker.SIZE_AUTO
+                            s_marker.height = Marker.SIZE_AUTO
+                            s_marker.alpha = 0.0F
 
-//                            s_marker.alpha = 0.0F
-                            //클러스터링
-                            clusterer.add(ItemKey(i, LatLng(it.get(i).y, it.get(i).x)), null)
+                            s_marker.captionMinZoom = 14.0
+                            s_marker.minZoom = 14.0
 
-                        }
-                        var i = 0
-                        for(coordinate in coordinates){
-                            val marker = Marker().apply {
-                                position = coordinate
-                                map = naverMap
-                                icon = MarkerIcons.BLACK
-                                iconTintColor = Color.RED
-                                width = Marker.SIZE_AUTO
-                                height = Marker.SIZE_AUTO
-                                alpha = 0.0F
-                            }
-
-                            marker.captionMinZoom = 14.0
-                            marker.minZoom = 14.0
-
-                            marker.setOnClickListener {
-                                markerPosition = marker.position
-
-                                val latitudeString = markerPosition!!.latitude.toString() // 위도를 문자열로 변환
-                                val longitudeString = markerPosition!!.longitude.toString() // 경도를 문자열로 변환
-                                val positionString = "$latitudeString $longitudeString" // 위도와 경도를 합쳐서 위치를 나타내는 문자열 생성
-
-                                // 테스트용 Toast출력
-//                              Toast.makeText(this, positionString, Toast.LENGTH_SHORT).show()
-
-                                openDrawerWithMarkerInfo("${placeCoordinates[i]}") // 마커에 대한 정보를 슬라이딩 드로어에 표시
+                            s_marker.setOnClickListener {
+                                markerPosition = s_marker.position
+                                openDrawerWithMarkerInfo(s_place) // 마커에 대한 정보를 슬라이딩 드로어에 표시
                                 true
                             }
-
-
+                        }
+                        coordinates.forEachIndexed { index, coordinate ->
+                            c_marker.position = coordinate
+                            clusterer.add(ItemKey(index, LatLng(coordinate.latitude, coordinate.longitude)), null)
                         }
                     }
-
-                     clusterer.map = naverMap
+                    clusterer.map = naverMap
                 }
-
             }
             override fun onFailure(call: Call<NaverMapItem>, t: Throwable) {
                 // 통신 실패 시 처리할 코드
