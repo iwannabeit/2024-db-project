@@ -4,6 +4,8 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.ClipData.Item
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -26,8 +28,13 @@ import com.naver.maps.map.MapFragment
 import com.naver.maps.map.NaverMap
 import com.naver.maps.map.NaverMapSdk
 import com.naver.maps.map.OnMapReadyCallback
+import com.naver.maps.map.clustering.ClusterMarkerInfo
 import com.naver.maps.map.clustering.Clusterer
+import com.naver.maps.map.clustering.DefaultClusterMarkerUpdater
+import com.naver.maps.map.clustering.DefaultLeafMarkerUpdater
+import com.naver.maps.map.clustering.LeafMarkerInfo
 import com.naver.maps.map.overlay.Marker
+import com.naver.maps.map.overlay.OverlayImage
 import com.naver.maps.map.util.FusedLocationSource
 import com.naver.maps.map.util.MarkerIcons
 import retrofit2.Call
@@ -41,8 +48,6 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
     private var naverMapApiInterface = NaverMapRequest.getClient().create(NaverMapApiInterface::class.java)
     private var naverMapInfo: List<NaverMapData>? = null
     private var naverMapList: NaverMapItem? = null
-
-//    private var clusterer: Clusterer<ItemKey> = Clusterer.Builder<ItemKey>().screenDistance(50.0).build()
 
     // FusedLocationProviderClient는 manifest에서 위치권한 얻은 후 사용할 수 있습니다!
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -171,6 +176,9 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
             //응답 받을 콜백 구현
             val call: Call<NaverMapItem> = naverMapApiInterface.getMapData()
 
+
+
+
             //클라이언트 객체가 제공하는 enqueue로 통신에 대한 요청, 응답 처리 방법 명시
             call.enqueue(object : Callback<NaverMapItem> {
                 override fun onResponse(call: Call<NaverMapItem>, response: Response<NaverMapItem>) {
@@ -182,8 +190,41 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                         val indoorMarkers = mutableListOf<Marker>()
                         val outdoorMarkers = mutableListOf<Marker>()
 
-                        val in_clusterer: Clusterer<ItemKey> = Clusterer.Builder<ItemKey>().screenDistance(50.0).build()
-                        val out_clusterer: Clusterer<ItemKey> = Clusterer.Builder<ItemKey>().screenDistance(50.0).build()
+                        val builder: Clusterer.Builder<ItemKey> = Clusterer.Builder<ItemKey>()
+
+                        builder.clusterMarkerUpdater(object : DefaultClusterMarkerUpdater() {
+                            override fun updateClusterMarker(info: ClusterMarkerInfo, marker: Marker) {
+                                super.updateClusterMarker(info, marker)
+
+                                val bitmap = BitmapFactory.decodeResource(this@MainActivity.resources, R.drawable.wf_clusterer)
+                                val resizedBitmap = Bitmap.createScaledBitmap(bitmap, 150, 150, false)
+                                marker.icon = OverlayImage.fromBitmap(resizedBitmap)
+                                marker.captionTextSize = 25f
+                                marker.captionColor = Color.rgb(100, 12, 12)
+                                marker.captionText = info.size.toString()
+                                /*
+                                marker.icon = if(info.size < 3) {
+                                    MarkerIcons.CLUSTER_LOW_DENSITY
+                                }
+
+                                else {
+                                    MarkerIcons.CLUSTER_MEDIUM_DENSITY
+                                }
+                                */
+                            }
+                        }).leafMarkerUpdater(object : DefaultLeafMarkerUpdater() {
+                            override fun updateLeafMarker(info: LeafMarkerInfo, marker: Marker) {
+                                super.updateLeafMarker(info, marker)
+                                val key = info.key as ItemKey
+
+                                val bitmap = BitmapFactory.decodeResource(this@MainActivity.resources, R.drawable.wf_marker)
+                                val resizedBitmap = Bitmap.createScaledBitmap(bitmap, 110, 150, false)
+                                marker.icon = OverlayImage.fromBitmap(resizedBitmap)
+                            }
+                        })
+
+                        val in_clusterer: Clusterer<ItemKey> = builder.screenDistance(50.0).build()
+                        val out_clusterer: Clusterer<ItemKey> = builder.screenDistance(50.0).build()
 
 
                             naverMapInfo?.let {
