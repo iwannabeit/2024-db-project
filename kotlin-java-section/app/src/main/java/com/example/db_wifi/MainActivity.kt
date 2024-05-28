@@ -27,6 +27,8 @@ import retrofit2.Callback
 import retrofit2.Response
 import com.naver.maps.map.util.MarkerIcons
 import android.Manifest
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.location.Location
 import android.widget.Button
 import android.widget.LinearLayout
@@ -36,7 +38,12 @@ import com.example.db_wifi.ResultPath
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.naver.maps.map.CameraAnimation
 import com.naver.maps.map.CameraUpdate
+import com.naver.maps.map.clustering.ClusterMarkerInfo
+import com.naver.maps.map.clustering.DefaultClusterMarkerUpdater
+import com.naver.maps.map.clustering.DefaultLeafMarkerUpdater
+import com.naver.maps.map.clustering.LeafMarkerInfo
 import com.naver.maps.map.overlay.CircleOverlay
+import com.naver.maps.map.overlay.OverlayImage
 import com.naver.maps.map.overlay.PathOverlay
 import com.naver.maps.map.overlay.PolygonOverlay
 import retrofit2.Retrofit
@@ -64,15 +71,14 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<LinearLayout>
 
-    private var latitudeString : String? = null
-    private var longitudeString : String? = null
-    private lateinit var targetPostion : LatLng
     private var currentLatLng : LatLng? = null
     private var currentLatitude :Double = 0.0
     private var currentLongitude :Double = 0.0
 
-    private var currentLocation: LatLng? = null
-    private var selectedMarker: Marker? = null
+
+    //실내 실외 버튼 코드
+    private lateinit var indoorBtn : Button
+    private lateinit var outdoorBtn : Button
 
     // 위치 권한 요청
     private val requestPermissionLauncher =
@@ -125,6 +131,9 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
         scaleBtn = findViewById(R.id.scaleBtn)
         non_scaleBtn = findViewById(R.id.non_scaleBtn)
 
+        // 내부,외부 마커
+        indoorBtn = findViewById(R.id.indoor_button)
+        outdoorBtn = findViewById(R.id.outdoor_button)
 
 
 
@@ -248,29 +257,24 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                         path_container.add(LatLng(path_cords_xy[1], path_cords_xy[0]))
                     }
                 }
+
                 // 새로운 PathOverlay 객체 생성
                 path.map = null
 
                 val newPath = PathOverlay()
-
                 if (path.map != null) {
                     // 기존에 있던 길찾기 제거
                     path.map = null
                     Toast.makeText(this@MainActivity, "경ss.", Toast.LENGTH_SHORT).show()
-
                 }
-
-// 새로운 경로 그리기
+                // 새로운 경로 그리기
                 //더미원소(0.1,0.1) 드랍후 path.coords에 path들을 넣어줌.
                 newPath.coords = path_container.drop(1)
                 newPath.color = Color.GREEN
                 newPath.map = naverMap // 경로선 그리기
 
-// 이후 path를 새로운 객체로 갱신
-
+                // 이후 path를 새로운 객체로 갱신
                 path = newPath
-
-
 
                 //경로 시작점으로 화면 이동
                 if (path.coords.isNotEmpty()) {
@@ -356,6 +360,46 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                     naverMapList = response.body()
                     naverMapInfo = naverMapList?.jjwifi
 
+                    val indoorMarkers = mutableListOf<Marker>()
+                    val outdoorMarkers = mutableListOf<Marker>()
+
+                    val builder: Clusterer.Builder<ItemKey> = Clusterer.Builder<ItemKey>()
+
+                    builder.clusterMarkerUpdater(object : DefaultClusterMarkerUpdater() {
+                        override fun updateClusterMarker(info: ClusterMarkerInfo, marker: Marker) {
+                            super.updateClusterMarker(info, marker)
+
+                            val bitmap = BitmapFactory.decodeResource(this@MainActivity.resources, R.drawable.wf_clusterer)
+                            val resizedBitmap = Bitmap.createScaledBitmap(bitmap, 150, 150, false)
+                            marker.icon = OverlayImage.fromBitmap(resizedBitmap)
+                            marker.captionTextSize = 25f
+                            marker.captionColor = Color.rgb(100, 12, 12)
+                            marker.captionText = info.size.toString()
+                            /*
+                            marker.icon = if(info.size < 3) {
+                                MarkerIcons.CLUSTER_LOW_DENSITY
+                            }
+
+                            else {
+                                MarkerIcons.CLUSTER_MEDIUM_DENSITY
+                            }
+                            */
+                        }
+                    }).leafMarkerUpdater(object : DefaultLeafMarkerUpdater() {
+                        override fun updateLeafMarker(info: LeafMarkerInfo, marker: Marker) {
+                            super.updateLeafMarker(info, marker)
+                            val key = info.key as ItemKey
+
+                            val bitmap = BitmapFactory.decodeResource(this@MainActivity.resources, R.drawable.wf_marker)
+                            val resizedBitmap = Bitmap.createScaledBitmap(bitmap, 110, 150, false)
+                            marker.icon = OverlayImage.fromBitmap(resizedBitmap)
+                        }
+                    })
+
+                    val in_clusterer: Clusterer<ItemKey> = builder.screenDistance(50.0).build()
+                    val out_clusterer: Clusterer<ItemKey> = builder.screenDistance(50.0).build()
+
+
                     naverMapInfo?.let{
                         for(i in 0 until it.size){
 
@@ -366,6 +410,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
                             var s_place = it.get(i).place.toString()
 
+                            // 숨겨진 마커
                             s_marker.position = LatLng(lat, lnt)
                             coordinates.add(LatLng(lat, lnt)) // 좌표저장
                             s_marker.map = naverMap
@@ -384,13 +429,48 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                                 openDrawerWithMarkerInfo(s_place) // 마커에 대한 정보를 슬라이딩 드로어에 표시
                                 true
                             }
-                        }
-                        coordinates.forEachIndexed { index, coordinate ->
-                            c_marker.position = coordinate
-                            clusterer.add(ItemKey(index, LatLng(coordinate.latitude, coordinate.longitude)), null)
+
+                            // 클러스터링 마커
+//                            c_marker.position = LatLng(lat,lnt)
+//                            clusterer.add(ItemKey(i,LatLng(lat,lnt)), null)
+//
+                            val marker = Marker()
+                            marker.alpha = 0.0f
+                            marker.position = LatLng(it[i].y, it[i].x)
+//
+                            if(it[i].side == "inside"){
+                                indoorMarkers.add(marker)
+                            }
+                            else{
+                                outdoorMarkers.add(marker)
+                            }
                         }
                     }
-                    clusterer.map = naverMap
+                    indoorBtn.setOnClickListener {
+                        // 모든 야외 마커 숨기기
+                        outdoorMarkers.forEach { it.map = null }
+                        // 모든 실내 마커 표시하기
+                        indoorMarkers.forEach {
+                            it.map = naverMap
+                            in_clusterer.add(ItemKey(it.hashCode(), it.position), null)
+                        }
+                        out_clusterer.map = null
+                        in_clusterer.map = naverMap
+                    }
+
+                    outdoorBtn.setOnClickListener {
+                        // 모든 실내 마커 숨기기
+                        indoorMarkers.forEach { it.map = null }
+                        // 모든 야외 마커 표시하기
+                        outdoorMarkers.forEach {
+                            it.map = naverMap
+                            out_clusterer.add(ItemKey(it.hashCode(), it.position), null)
+                        }
+
+                        out_clusterer.map = naverMap
+                        in_clusterer.map = null
+                    }
+
                 }
             }
             override fun onFailure(call: Call<NaverMapItem>, t: Throwable) {
