@@ -190,6 +190,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                                 for (i in 0 until it.size) {
 
                                     val marker = Marker()
+                                    marker.alpha = 0.0f
                                     marker.position = LatLng(it[i].y, it[i].x)
 //
                                     if(it[i].side == "inside"){
@@ -206,7 +207,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                             outdoorMarkers.forEach { it.map = null }
                             // 모든 실내 마커 표시하기
                             indoorMarkers.forEach {
-//                                it.map = naverMap
+                                it.map = naverMap
                                 in_clusterer.add(ItemKey(it.hashCode(), it.position), null)
                             }
                             out_clusterer.map = null
@@ -218,15 +219,14 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                             indoorMarkers.forEach { it.map = null }
                             // 모든 야외 마커 표시하기
                             outdoorMarkers.forEach {
-//                                it.map = naverMap
+                                it.map = naverMap
                                 out_clusterer.add(ItemKey(it.hashCode(), it.position), null)
                             }
 
                             out_clusterer.map = naverMap
                             in_clusterer.map = null
                         }
-//                            s_marker.map = naverMap
-//                        clusterer.map = naverMap
+
 
                     }
 
@@ -245,9 +245,6 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
             naverMap.locationSource = locationSource // 기존에 설정된 위치 소스 초기화
             naverMap.locationTrackingMode = LocationTrackingMode.Follow // 위치 추적 모드를 Follow로 설정
             naverMap.uiSettings.isLocationButtonEnabled = true // 현위치 버튼
-
-
-
 
 
         }
