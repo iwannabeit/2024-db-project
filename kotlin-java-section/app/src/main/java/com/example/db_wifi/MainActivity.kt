@@ -1,72 +1,61 @@
 package com.example.db_wifi
 
-import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.location.Location
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import android.view.View
-import android.view.animation.AnimationUtils
-import android.widget.Button
-import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.GravityCompat
-import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.FragmentActivity
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.CameraUpdate
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.maps.android.clustering.ClusterItem
-import com.google.maps.android.clustering.ClusterManager
 import com.naver.maps.geometry.LatLng
-import com.naver.maps.map.CameraAnimation
 import com.naver.maps.map.LocationTrackingMode
 import com.naver.maps.map.MapFragment
 import com.naver.maps.map.NaverMap
-import com.naver.maps.map.NaverMapOptions
 import com.naver.maps.map.NaverMapSdk
 import com.naver.maps.map.OnMapReadyCallback
 import com.naver.maps.map.clustering.Clusterer
-import com.naver.maps.map.overlay.CircleOverlay
 import com.naver.maps.map.overlay.Marker
-import com.naver.maps.map.overlay.PathOverlay
-import com.naver.maps.map.overlay.PolygonOverlay
 import com.naver.maps.map.util.FusedLocationSource
-import com.naver.maps.map.util.MarkerIcons
-import com.naver.maps.map.widget.LocationButtonView
-import okhttp3.Call
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okio.IOException
+import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import retrofit2.Call as Call1
+import com.naver.maps.map.util.MarkerIcons
+import android.Manifest
+import android.location.Location
+import android.widget.Button
+import android.widget.LinearLayout
+import androidx.core.app.ActivityCompat
+import com.example.db_wifi.NaverAPI
+import com.example.db_wifi.ResultPath
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.naver.maps.map.CameraAnimation
+import com.naver.maps.map.CameraUpdate
+import com.naver.maps.map.overlay.CircleOverlay
+import com.naver.maps.map.overlay.PathOverlay
+import com.naver.maps.map.overlay.PolygonOverlay
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
+//import com.naver.maps.map.CameraUpdate
 class MainActivity : FragmentActivity(), OnMapReadyCallback {
+
     private var naverMapInfo: List<NaverMapData>? = null
     private var naverMapList: NaverMapItem? = null
 
     // FusedLocationProviderClient는 manifest에서 위치권한 얻은 후 사용할 수 있습니다!
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private lateinit var locationSource: FusedLocationSource
+    private lateinit var locationSource: FusedLocationSource // 위치관련 클래스(타입)
 
     //위치 권한 요청을 위한 코드
     private val LOCATION_PERMISSION_REQUEST_CODE: Int = 1000
 
     private lateinit var naverMap: NaverMap
-
-    private var currentLatLng : LatLng? = null
 
     private lateinit var markerInfoText: TextView
     private lateinit var search_loadBtn : Button
@@ -78,16 +67,13 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
     private var latitudeString : String? = null
     private var longitudeString : String? = null
     private lateinit var targetPostion : LatLng
+    private var currentLatLng : LatLng? = null
+    private var currentLatitude :Double = 0.0
+    private var currentLongitude :Double = 0.0
 
     private var currentLocation: LatLng? = null
     private var selectedMarker: Marker? = null
-
-    // 클러스터링 구조
-    private var clusterer: Clusterer<ItemKey> = Clusterer.Builder<ItemKey>()
-        .minZoom(5) // 클러스터링이 시작되는 최소 줌 레벨
-        .maxZoom(13) // 클러스터링이 끝나는 최대 줌 레벨
-        .screenDistance(50.0)
-        .build()
+    private var path = PathOverlay() // 경로선을 나타내는 위한 오버레이
 
     // 위치 권한 요청
     private val requestPermissionLauncher =
@@ -101,6 +87,13 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
             }
         }
 
+    // 클러스터링 구조
+    private var clusterer: Clusterer<ItemKey> = Clusterer.Builder<ItemKey>()
+        .minZoom(3) // 클러스터링이 시작되는 최소 줌 레벨
+        .maxZoom(13) // 클러스터링이 끝나는 최대 줌 레벨
+        .screenDistance(50.0)
+        .build()
+
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -110,11 +103,9 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         locationSource = FusedLocationSource(this, LOCATION_PERMISSION_REQUEST_CODE)
 
+
         // 위치 권한 확인
         checkLocationPermission()
-
-        // 첫 fetchCurrentLocation() 실행 시, null로 들어가는 오류 때메 미리 실행
-        fetchCurrentLocation()
 
         NaverMapSdk.getInstance(this).client =
             NaverMapSdk.NaverCloudPlatformClient("f5wddcflyd")
@@ -137,6 +128,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
 
 
+
         enableEdgeToEdge()
 //        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
 //            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -144,7 +136,6 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 //            insets
 //        }
     }
-
 
     // 현재위치의 LatLng값을 얻어오는 함수입니다. 필요시 사용하세요! (currentLatLng이 이름으로 변수 선언 후 사용하시면 됩니다)
     private fun fetchCurrentLocation() {
@@ -171,7 +162,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                     // 위치 정보를 가져오면 LatLng 객체로 변환
                     currentLatLng = LatLng(it.latitude, it.longitude)
                     // 여기서 currentLatLng을 사용하여 작업을 수행할 수 있습니다.
-
+                    // 예를 들어, 현재 위치를 사용하여 네이버 지도에 마커를 추가하거나 경로를 그릴 수 있습니다.
                 } ?: run {
                     Toast.makeText(this, "위치 정보를 가져오지 못했습니다.", Toast.LENGTH_SHORT).show()
                 }
@@ -181,23 +172,24 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                 e.printStackTrace()
             }
     }
+
+
     private fun checkLocationPermission() {
+        // 권한 확인 함수
         when {
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                // 권한이 이미 허용되어 있으면 위치 정보 요청
-                //requestLocationUpdates()
+            ContextCompat.checkSelfPermission( // 권한이 부여되어있는지 확인하는 메소드
+                this, // 현재 액티비티에서
+                Manifest.permission.ACCESS_FINE_LOCATION // GPS접근 권한이 있는가
+            ) == PackageManager.PERMISSION_GRANTED -> { // 권한이 허락되었음을 알리는 함수, 위의 값과 동일하면 권한을 허락한 것
+                requestLocationUpdates() // 현재위치 불러오는 함수
             }
             else -> {
-                // 권한이 없을 경우 권한 요청
+                // 권한이 없을 경우 GPS 권한 요청
                 requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
             }
         }
     }
 
-    // 현재 위치의 위도와 경도를 가져온 후 toast로 출력하는 함수
     @SuppressLint("MissingPermission")
     private fun requestLocationUpdates() {
         // 현재 위치 요청
@@ -225,41 +217,74 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
         bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
     }
 
+    private fun openNaverMapAppForDirections(startLatitude: Double, startLongitude: Double, endLatitude: Double, endLongitude: Double) {
+        // 길찾기 예시
+        val APIKEY_ID = "tgoutvp62u"
+        val APIKEY = "5G2F2i3pLlKwqmJDFH18gEBFGNM7M44GvTwm3s3M"
+        //레트로핏 객체 생성
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://naveropenapi.apigw.ntruss.com/map-direction/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        val api = retrofit.create(NaverAPI::class.java)
+
+        // 출발지-목적지
+        val callgetPath = api.getPath(APIKEY_ID, APIKEY, "${startLongitude} , ${startLatitude}", "${endLongitude}, ${endLatitude}")
+
+        callgetPath.enqueue(object : Callback<ResultPath> { // 비동기 방식으로 API 요청
+            override fun onResponse(call: Call<ResultPath>, response: Response<ResultPath>) { // Response 객체를 통해 응답 데이터를 접근가능
+                val path_cords_list = response.body()?.route?.traoptimal // traoptimal = 실시간 최적경로 넣기
 
 
-    private fun openNaverMapAppForDirections() {
-        val currentLocationSafe = currentLocation
-        val selectedMarkerSafe = selectedMarker
+                // 경로 넣어놓기 위한 공간, MutableList에 add 기능 쓰기 위해 더미 원소(0.1, 0.1) 하나 넣어둠
+                val path_container: MutableList<LatLng> = mutableListOf(LatLng(0.1, 0.1))
 
-        if (currentLocationSafe != null && selectedMarkerSafe != null) {
-            val uri = Uri.parse("nmap://route/walk?slat=${currentLocationSafe.latitude}&slng=${currentLocationSafe.longitude}&dlat=${selectedMarkerSafe.position.latitude}&dlng=${selectedMarkerSafe.position.longitude}&appname=com.example.db_wifi")
-            val intent = Intent(Intent.ACTION_VIEW, uri)
-            intent.addCategory(Intent.CATEGORY_BROWSABLE)
-            intent.setPackage("com.nhn.android.nmap")  // 네이버 지도 앱의 패키지 이름 지정
+                //경로 그리기 응답바디가 List<List<Double>> 이라서 2중 for문 썼음
+                //구한 경로를 하나씩 path_container에 추가
+                path_cords_list?.forEach { path_cords ->
+                    path_cords.path.forEach { path_cords_xy ->
+                        path_container.add(LatLng(path_cords_xy[1], path_cords_xy[0]))
+                    }
+                }
 
-            val packageManager = packageManager
-            val activities = packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
-            val isIntentSafe = activities.isNotEmpty()
 
-            if (isIntentSafe) {
-                startActivity(intent)
-            } else {
-                // 네이버 지도 앱이 설치되어 있지 않으면 Play Store로 유도
-                val playStoreUri = Uri.parse("market://details?id=com.nhn.android.nmap")
-                val playStoreIntent = Intent(Intent.ACTION_VIEW, playStoreUri)
-                playStoreIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivity(playStoreIntent)
-                Toast.makeText(this, "네이버 지도 앱이 설치되어 있지 않습니다. 설치를 위해 Play Store로 이동합니다.", Toast.LENGTH_SHORT).show()
+// 새로운 PathOverlay 객체 생성
+                path.map = null
+
+                val newPath = PathOverlay()
+
+                if (path.map != null) {
+                    // 기존에 있던 길찾기 제거
+                    path.map = null
+                    Toast.makeText(this@MainActivity, "경ss.", Toast.LENGTH_SHORT).show()
+
+                }
+
+// 새로운 경로 그리기
+                //더미원소(0.1,0.1) 드랍후 path.coords에 path들을 넣어줌.
+                newPath.coords = path_container.drop(1)
+                newPath.color = Color.GREEN
+                newPath.map = naverMap // 경로선 그리기
+
+// 이후 path를 새로운 객체로 갱신
+
+                path = newPath
+
+                //경로 시작점으로 화면 이동
+                if (path.coords.isNotEmpty()) {
+                    val cameraUpdate = CameraUpdate.scrollTo(path.coords[0])
+                        .animate(CameraAnimation.Fly, 3000)
+                    naverMap.moveCamera(cameraUpdate)
+
+                    Toast.makeText(this@MainActivity, "경로 안내가 시작됩니다.", Toast.LENGTH_SHORT).show()
+                }
             }
-        } else {
-            Toast.makeText(this, "현재 위치 또는 마커가 선택되지 않았습니다.", Toast.LENGTH_SHORT).show()
-            if (currentLocationSafe == null) {
-                Log.v("경로찾기", "현재 위치가 설정되지 않았습니다.")
+
+            override fun onFailure(call: Call<ResultPath>, t: Throwable) {
+                Toast.makeText(this@MainActivity, "경로 안내 실패: ${t.message}", Toast.LENGTH_SHORT).show()
             }
-            if (selectedMarkerSafe == null) {
-                Log.v("경로찾기", "선택된 마커가 없습니다.")
-            }
-        }
+        })
     }
 
 
@@ -298,111 +323,100 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
     }
 
 
-
     override fun onMapReady(naverMap: NaverMap) {
         this.naverMap = naverMap // naverMap 변수 초기화
+        naverMap.isIndoorEnabled = true // 실내지도
+
+        naverMap.locationSource = FusedLocationSource(this, 1000)
+        naverMap.locationTrackingMode = LocationTrackingMode.Follow // 위치 추적 모드를 Follow로 설정
+        naverMap.uiSettings.isLocationButtonEnabled = true // 현위치 버튼
+
+        // 현재 위치 위도, 경도 저장
+        fetchCurrentLocation()
+//        currentLatitude = currentLatLng?.latitude ?: 0.0
+//        currentLongitude = currentLatLng?.longitude ?: 0.0
+
+
+        // 마커 띄우는 곳!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        val s_marker = Marker()
+
+        val coordinates = mutableListOf<LatLng>()
+        var markerPosition : LatLng? = null
+
+
 
         //클라이언트 객체 생성
         val naverMapApiInterface = NaverMapRequest.getClient().create(NaverMapApiInterface::class.java)
 
-
         //응답 받을 콜백 구현
-//            val call = naverMapApiInterface.getNaverMapData()
-        val call: Call1<NaverMapItem> = naverMapApiInterface.getMapData()
-
+        val call: Call<NaverMapItem> = naverMapApiInterface.getMapData()
         Log.v("Debug중","디버그중입니다.")
 
         //클라이언트 객체가 제공하는 enqueue로 통신에 대한 요청, 응답 처리 방법 명시
         call.enqueue(object : Callback<NaverMapItem> {
-            override fun onResponse(call: Call1<NaverMapItem>, response: Response<NaverMapItem>) {
+            override fun onResponse(call: Call<NaverMapItem>, response: Response<NaverMapItem>) {
                 if(response.isSuccessful){
                     Log.v("디버깅중", "성공!!!!!")
                     naverMapList = response.body()
                     naverMapInfo = naverMapList?.jjwifi
 
-                    Toast.makeText(this@MainActivity, naverMapInfo?.get(1)?.address, Toast.LENGTH_LONG).show()
+                    naverMapInfo?.let{
+                        for(i in 0 until it.size){
 
+                            val lat = it.get(i).y
+                            val lnt = it.get(i).x
+
+                            s_marker.position = LatLng(lat, lnt)
+                            coordinates.add(LatLng(lat, lnt))
+
+//                            marker.map = naverMap
+
+//                            s_marker.alpha = 0.0F
+                            //클러스터링
+                            clusterer.add(ItemKey(i, LatLng(it.get(i).y, it.get(i).x)), null)
+
+                        }
+
+                        for(coordinate in coordinates){
+                            val marker = Marker().apply {
+                                position = coordinate
+                                map = naverMap
+                                icon = MarkerIcons.BLACK
+                                iconTintColor = Color.RED
+                                width = Marker.SIZE_AUTO
+                                height = Marker.SIZE_AUTO
+                                alpha = 0.0F
+                            }
+
+                            marker.captionMinZoom = 14.0
+                            marker.minZoom = 14.0
+
+                            marker.setOnClickListener {
+                                markerPosition = marker.position
+                                val latitudeString = markerPosition!!.latitude.toString() // 위도를 문자열로 변환
+                                val longitudeString = markerPosition!!.longitude.toString() // 경도를 문자열로 변환
+                                val positionString = "$latitudeString $longitudeString" // 위도와 경도를 합쳐서 위치를 나타내는 문자열 생성
+
+                                // 테스트용 Toast출력
+//                              Toast.makeText(this, positionString, Toast.LENGTH_SHORT).show()
+
+                                openDrawerWithMarkerInfo(positionString) // 마커에 대한 정보를 슬라이딩 드로어에 표시
+                                true
+                            }
+
+
+                        }
+                    }
+
+                    clusterer.map = naverMap
                 }
 
             }
-            override fun onFailure(call: Call1<NaverMapItem>, t: Throwable) {
+            override fun onFailure(call: Call<NaverMapItem>, t: Throwable) {
                 // 통신 실패 시 처리할 코드
                 Log.v("디버깅중", "실패!!!!!")
             }
         })
-
-        //실내지도 활성화
-//            naverMap.isIndoorEnabled = true
-//            naverMap.uiSettings.isIndoorLevelPickerEnabled = true // 실내지도 층 버튼
-
-//            naverMap.locationSource = locationSource // 기존에 설정된 위치 소스 초기화
-        naverMap.locationSource = FusedLocationSource(this, 1000)
-        naverMap.locationTrackingMode = LocationTrackingMode.Follow // 위치 추적 모드를 Follow로 설정
-        naverMap.uiSettings.isLocationButtonEnabled = true // 현위치 버튼
-
-
-// 좌표 리스트
-        val coordinates = listOf(
-            LatLng(35.8414219, 127.0748137),
-            LatLng(35.8424219, 127.0768137),
-            LatLng(35.8434219, 127.0778137)
-            // 필요한 만큼 LatLng 객체를 추가
-        )
-
-// 마커 리스트
-        val markers = mutableListOf<Marker>()
-
-        var markerPosition : LatLng? = null
-// 마커 생성 및 지도에 추가
-        for (coordinate in coordinates) {
-            val marker = Marker().apply {
-                position = coordinate
-                map = naverMap
-                icon = MarkerIcons.BLACK
-                iconTintColor = Color.RED
-                width = Marker.SIZE_AUTO
-                height = Marker.SIZE_AUTO
-                alpha = 0.0F
-            }
-
-            // 마커 클릭 리스너 설정
-            marker.setOnClickListener {
-                markerPosition = marker.position
-                val latitudeString = markerPosition!!.latitude.toString() // 위도를 문자열로 변환
-                val longitudeString = markerPosition!!.longitude.toString() // 경도를 문자열로 변환
-                val positionString = "$latitudeString $longitudeString" // 위도와 경도를 합쳐서 위치를 나타내는 문자열 생성
-
-                // 테스트용 Toast출력
-//                Toast.makeText(this, positionString, Toast.LENGTH_SHORT).show()
-
-                openDrawerWithMarkerInfo(positionString) // 마커에 대한 정보를 슬라이딩 드로어에 표시
-                true
-            }
-            marker.captionMinZoom = 14.0
-            marker.minZoom = 14.0
-//            marker.captionMaxZoom = 16.0
-//            marker.maxZoom = 16.0
-
-            // 마커 리스트에 추가
-            markers.add(marker)
-        }
-
-        clusterer.add(ItemKey(1, LatLng(35.8414219, 127.0748137)), null)
-        clusterer.add(ItemKey(2, LatLng(35.8424219, 127.0768137)), null)
-        clusterer.add(ItemKey(3, LatLng(35.8434219, 127.0778137)), null)
-
-        val keyTagMap = mapOf(
-            ItemKey(1, LatLng(35.8414219, 127.0748137)) to null,
-            ItemKey(2, LatLng(35.8424219, 127.0768137)) to null,
-            ItemKey(3, LatLng(35.8434219, 127.0778137)) to null,
-        )
-        clusterer.addAll(keyTagMap)
-
-        clusterer.map = naverMap
-
-
-
-
 
 
 
@@ -435,7 +449,6 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
             polygon.map = if (zoomLevel >= 13) null else naverMap
         }
 
-
         scaleBtn.setOnClickListener{
             markerPosition?.let { it1 -> drawCircle(it1) }
         }
@@ -443,29 +456,23 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
             removeCircle()
         }
         search_loadBtn.setOnClickListener{
-                fetchCurrentLocation()
-//            openNaverMapAppForDirections()
-//            Toast.makeText(this, "길찾기", Toast.LENGTH_SHORT).show()
-            // 추가 부분(테스트 용)
+//            fetchCurrentLocation()
+            currentLatitude = currentLatLng?.latitude ?: 0.0
+            currentLongitude = currentLatLng?.longitude ?: 0.0
+
+            // 마커 포지션
             val latitude1 = markerPosition?.latitude ?: 0.0
             val longitude1 = markerPosition?.longitude ?: 0.0
-            val positionString1 = "Latitude: $latitude1, Longitude: $longitude1"
 
-            val latitude = currentLatLng?.latitude ?: 0.0
-            val longitude = currentLatLng?.longitude ?: 0.0
-            val positionString = "Latitude: $latitude, Longitude: $longitude"
+            val positionString = "Latitude: $currentLatitude, Longitude: $currentLongitude"
+//            Toast.makeText(this, positionString, Toast.LENGTH_SHORT).show()
 
-            val positionString2 = positionString1 + positionString
-            Toast.makeText(this, positionString2, Toast.LENGTH_SHORT).show()
-            //여기까지가 추가 부분
+            //, currentLatitude, currentLongitude
+            openNaverMapAppForDirections(currentLatitude, currentLongitude, latitude1, longitude1)
+//            Toast.makeText(this, "길찾기", Toast.LENGTH_SHORT).show()
         }
     }
-
-
-
-
     //    companion object {
 //        private const val LOCATION_PERMISSION_REQUEST_CODE = 100
 //    }
-
 }
