@@ -22,6 +22,8 @@ public class NaverMapData {
     private double x;
     @SerializedName("y")
     private double y;
+    @SerializedName("side")
+    private String side;
 
 
     public int getId() {
@@ -50,5 +52,6 @@ public class NaverMapData {
     public double getY() {
         return y;
     }
+    public String getSide() { return side;}
 
 }
