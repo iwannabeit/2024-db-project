@@ -89,6 +89,22 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/indoor_button" />
 
+            <Button
+                android:id="@+id/finish_loadBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginBottom="60dp"
+                android:background="@drawable/rounded_button"
+                android:fontFamily="@font/gmarketsansttfmedium"
+                android:text="길찾기 종료"
+                android:textSize="15sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
         </androidx.constraintlayout.widget.ConstraintLayout>
 
 
@@ -103,29 +119,29 @@
             android:gravity="center"
             app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:paddingBottom="8dp">
-
-            <ImageView
-                android:layout_width="26dp"
-                android:layout_height="26dp"
-                android:src="@drawable/icon"
-                android:layout_marginBottom="18dp"/>
-
-            <TextView
-                android:layout_width="200dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="와이파이 위치 정보"
-                android:textSize="22sp"
-                android:fontFamily="@font/gmarketsansttfbold"
+                android:orientation="horizontal"
                 android:gravity="center"
-                android:paddingBottom="30dp" />
+                android:paddingBottom="8dp">
 
-        </LinearLayout>
+                <ImageView
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:src="@drawable/icon"
+                    android:layout_marginBottom="18dp"/>
+
+                <TextView
+                    android:layout_width="200dp"
+                    android:layout_height="wrap_content"
+                    android:text="와이파이 위치 정보"
+                    android:textSize="22sp"
+                    android:fontFamily="@font/gmarketsansttfbold"
+                    android:gravity="center"
+                    android:paddingBottom="30dp" />
+
+            </LinearLayout>
 
             <!-- 슬라이딩 드로어에 표시될 내용 -->
             <TextView

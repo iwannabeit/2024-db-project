@@ -5,7 +5,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class NaverMapRequest {
 
-    public static String BASE_URL = "http://192.168.166.123/db_project/php-section/";
+    public static String BASE_URL = "http://10.0.2.2/db_project/php-section/";
 
     private static Retrofit retrofit;
     public static Retrofit getClient(){
