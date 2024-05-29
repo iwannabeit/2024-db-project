@@ -31,6 +31,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.location.Location
+import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
@@ -90,6 +91,9 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
     private lateinit var searchList : MutableList<String>
     private lateinit var LatLngList : MutableList<LatLng>
     private var index : Int? = 0
+
+    //길찾기 종료
+    private lateinit var finish_loadBtn : Button
 
     // 위치 권한 요청
     private val requestPermissionLauncher =
@@ -152,6 +156,13 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
         searchList = arrayListOf<String>()
         LatLngList = arrayListOf<LatLng>()
+
+        // 길찾기 종료 버튼
+        finish_loadBtn = findViewById(R.id.finish_loadBtn)
+        finish_loadBtn.visibility = View.INVISIBLE
+        finish_loadBtn.isClickable = false
+
+
 
 
         autoComplete.setAdapter(ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, searchList))
@@ -334,7 +345,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                         .animate(CameraAnimation.Fly, 3000)
                     naverMap.moveCamera(cameraUpdate)
 
-                    Toast.makeText(this@MainActivity, "경로 안내가 시작됩니다.", Toast.LENGTH_SHORT).show()
+//                    Toast.makeText(this@MainActivity, "경로 안내가 시작됩니다.", Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -588,6 +599,15 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
             //, currentLatitude, currentLongitude
             openNaverMapAppForDirections(currentLatitude, currentLongitude, latitude1, longitude1)
             Toast.makeText(this, "길찾기", Toast.LENGTH_SHORT).show()
+
+            finish_loadBtn.visibility = View.VISIBLE
+            finish_loadBtn.isClickable = true
+        }
+        finish_loadBtn.setOnClickListener{
+            path.map = null
+//            Toast.makeText(this,  "경로 안내가 종료 되었습니다.", Toast.LENGTH_SHORT).show()
+            finish_loadBtn.visibility = View.INVISIBLE
+            finish_loadBtn.isClickable = false
         }
     }
     //    companion object {
