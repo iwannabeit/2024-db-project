@@ -8,7 +8,4 @@ import retrofit2.http.GET;
 public interface NaverMapApiInterface {
     @GET("demo.php")
     Call<NaverMapItem> getMapData();
-
-    @GET("inside.php")
-    Call<NaverMapItem> getInsideData();
 }
