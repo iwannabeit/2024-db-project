@@ -36,6 +36,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import androidx.core.app.ActivityCompat
 import com.example.db_wifi.NaverAPI
@@ -86,7 +87,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
     private lateinit var outdoorBtn : Button
 
     //검색 기능
-    private lateinit var add_srchBtn : Button
+    private lateinit var add_srchBtn : ImageButton
     private lateinit var autoComplete : AutoCompleteTextView
     private lateinit var searchList : MutableList<String>
     private lateinit var LatLngList : MutableList<LatLng>
