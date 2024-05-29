@@ -23,7 +23,26 @@
             android:text="db-wifi"
             android:textSize="30sp" />
     </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@android:color/white">
 
+        <AutoCompleteTextView
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/autoComplete"
+            android:hint="주소를 입력하세요."
+            android:completionThreshold="1"
+            android:gravity="center_vertical"
+            android:textColorHint="#555555"/>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/addressSrchBtn"
+            android:text="검색" />
+    </LinearLayout>
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -36,16 +55,77 @@
             android:name="com.naver.maps.map.MapFragment" />
 
         <!-- Bottom Sheet 영역 -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_anchor="@+id/map"
+            app:layout_anchorGravity="center">
+
+            <Button
+                android:id="@+id/indoor_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="100dp"
+                android:layout_marginEnd="20dp"
+                android:background="@drawable/rounded_button"
+                android:fontFamily="@font/gmarketsansttfmedium"
+                android:text="실내"
+                android:textSize="22sp"
+                app:layout_constraintBottom_toTopOf="@id/outdoor_button"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.0" />
+
+            <Button
+                android:id="@+id/outdoor_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:layout_marginEnd="20dp"
+                android:background="@drawable/rounded_button"
+                android:fontFamily="@font/gmarketsansttfmedium"
+                android:text="실외"
+                android:textSize="22sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/indoor_button" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
         <LinearLayout
             android:id="@+id/bottom_sheet"
             android:layout_width="match_parent"
             android:layout_height="250dp"
             android:layout_gravity="bottom"
-            android:background="@android:color/white"
+            android:background="@drawable/round_bottom"
             android:orientation="vertical"
             android:padding="16dp"
             android:gravity="center"
             app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:paddingBottom="8dp">
+
+            <ImageView
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:src="@drawable/icon"
+                android:layout_marginBottom="18dp"/>
+
+            <TextView
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:text="와이파이 위치 정보"
+                android:textSize="22sp"
+                android:fontFamily="@font/gmarketsansttfbold"
+                android:gravity="center"
+                android:paddingBottom="30dp" />
+
+        </LinearLayout>
 
             <!-- 슬라이딩 드로어에 표시될 내용 -->
             <TextView
@@ -53,9 +133,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Marker Information"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:gravity="center"/>
+                android:textSize="19sp"
+                android:fontFamily="@font/gmarketsansttfbold"
+                android:gravity="center"
+                android:textColor="#4b1c4e"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -70,6 +151,10 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:layout_margin="8dp"
+                    android:background="@drawable/throw_button"
+                    android:textColor="@color/white"
+                    android:textSize="15dp"
+                    android:fontFamily="@font/gmarketsansttfmedium"
                     android:text="범위 보기"/>
 
                 <Button
@@ -78,6 +163,10 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:layout_margin="8dp"
+                    android:background="@drawable/throw_button"
+                    android:textColor="@color/white"
+                    android:textSize="15dp"
+                    android:fontFamily="@font/gmarketsansttfmedium"
                     android:text="범위 없애기"/>
 
                 <Button
@@ -86,6 +175,10 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:layout_margin="8dp"
+                    android:background="@drawable/throw_button"
+                    android:textColor="@color/white"
+                    android:textSize="15dp"
+                    android:fontFamily="@font/gmarketsansttfmedium"
                     android:text="길찾기" />
 
             </LinearLayout>

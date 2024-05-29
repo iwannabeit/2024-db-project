@@ -3,8 +3,8 @@ ini_set('memory_limit', '-1');
 // 데이터베이스 연결 정보
 $servername = "127.0.0.1"; // MySQL 서버 주소
 $username = "root"; // MySQL 사용자명
-$password = "jaewoo"; // MySQL 비밀번호
-$dbname = "wifi"; // 사용할 데이터베이스명
+$password = ""; // MySQL 비밀번호
+$dbname = "dbproject"; // 사용할 데이터베이스명
 
 // MySQLi 연결 생성
 $conn = mysqli_connect($servername, $username, $password, $dbname);
@@ -14,7 +14,7 @@ if (!$conn) {
   die("연결 실패: " . mysqli_connect_error());
 }
 
-$sql = "SELECT DISTINCT * FROM jjwifi";
+$sql = "SELECT DISTINCT * FROM jjwifi_inout";
 $result = mysqli_query($conn, $sql);
 $data = array();
 
@@ -27,7 +27,8 @@ if($result){
     'address'=>$row[3],
     'place'=>$row[4],
     'x'=>$row[5],
-    'y'=>$row[6]
+    'y'=>$row[6],
+    'side'=>$row[7]
     ));
   }
   $response = array("jwifi" => $data);
