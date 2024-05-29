@@ -267,11 +267,11 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                 // 위치가 성공적으로 가져와졌을 때 처리
                 val latitude = location?.latitude ?: 0.0
                 val longitude = location?.longitude ?: 0.0
-                Toast.makeText(
-                    this,
-                    "현재 위치: 위도 $latitude, 경도 $longitude",
-                    Toast.LENGTH_LONG
-                ).show()
+//                Toast.makeText(
+//                    this,
+//                    "현재 위치: 위도 $latitude, 경도 $longitude",
+//                    Toast.LENGTH_LONG
+//                ).show()
             }
             .addOnFailureListener { e ->
                 // 위치 가져오기 실패시 처리
@@ -460,8 +460,8 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                         }
                     })
 
-                    val in_clusterer: Clusterer<ItemKey> = builder.screenDistance(50.0).build()
-                    val out_clusterer: Clusterer<ItemKey> = builder.screenDistance(50.0).build()
+                    val in_clusterer: Clusterer<ItemKey> = builder.screenDistance(100.0).build()
+                    val out_clusterer: Clusterer<ItemKey> = builder.screenDistance(100.0).build()
 
 
                     naverMapInfo?.let{
@@ -469,7 +469,8 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
                             val lat = it.get(i).y
                             val lnt = it.get(i).x
-                            val s_marker = Marker()
+//                            val s_marker = Marker()
+                            val marker = Marker()
                             // 장소이름 저장
 
                             var s_place = it.get(i).place.toString()
@@ -480,21 +481,21 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                             LatLngList.add(LatLng(lat,lnt))
 
                             // 숨겨진 마커
-                            s_marker.position = LatLng(lat, lnt)
-                            coordinates.add(LatLng(lat, lnt)) // 좌표저장
-                            s_marker.map = naverMap
+//                            s_marker.position = LatLng(lat, lnt)
+//                            coordinates.add(LatLng(lat, lnt)) // 좌표저장
+//                            s_marker.map = naverMap
+//
+//                            s_marker.icon = MarkerIcons.BLACK
+//                            s_marker.iconTintColor = Color.RED
+//                            s_marker.width = Marker.SIZE_AUTO
+//                            s_marker.height = Marker.SIZE_AUTO
+//                            s_marker.alpha = 0.0F
+//
+//                            s_marker.captionMinZoom = 14.0
+//                            s_marker.minZoom = 14.0
 
-                            s_marker.icon = MarkerIcons.BLACK
-                            s_marker.iconTintColor = Color.RED
-                            s_marker.width = Marker.SIZE_AUTO
-                            s_marker.height = Marker.SIZE_AUTO
-                            s_marker.alpha = 0.0F
-
-                            s_marker.captionMinZoom = 14.0
-                            s_marker.minZoom = 14.0
-
-                            s_marker.setOnClickListener {
-                                markerPosition = s_marker.position
+                            marker.setOnClickListener {
+                                markerPosition = marker.position
                                 openDrawerWithMarkerInfo(s_place) // 마커에 대한 정보를 슬라이딩 드로어에 표시
                                 true
                             }
@@ -503,7 +504,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 //                            c_marker.position = LatLng(lat,lnt)
 //                            clusterer.add(ItemKey(i,LatLng(lat,lnt)), null)
 //
-                            val marker = Marker()
+//                            val marker = Marker()
                             marker.alpha = 0.0f
                             marker.position = LatLng(it[i].y, it[i].x)
 //
@@ -595,11 +596,11 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
             val longitude1 = markerPosition?.longitude ?: 0.0
 
             val positionString = "Latitude: $currentLatitude, Longitude: $currentLongitude"
-            Toast.makeText(this, positionString, Toast.LENGTH_SHORT).show()
+//            Toast.makeText(this, positionString, Toast.LENGTH_SHORT).show()
 
             //, currentLatitude, currentLongitude
             openNaverMapAppForDirections(currentLatitude, currentLongitude, latitude1, longitude1)
-            Toast.makeText(this, "길찾기", Toast.LENGTH_SHORT).show()
+//            Toast.makeText(this, "길찾기", Toast.LENGTH_SHORT).show()
 
             finish_loadBtn.visibility = View.VISIBLE
             finish_loadBtn.isClickable = true

@@ -101,6 +101,7 @@
                 android:fontFamily="@font/gmarketsansttfmedium"
                 android:text="길찾기 종료"
                 android:textSize="15sp"
+                android:textColor="@color/white"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
@@ -138,6 +139,7 @@
                     android:layout_height="wrap_content"
                     android:text="와이파이 위치 정보"
                     android:textSize="22sp"
+                    android:textColor="@color/black"
                     android:fontFamily="@font/gmarketsansttfbold"
                     android:gravity="center"
                     android:paddingBottom="30dp" />
