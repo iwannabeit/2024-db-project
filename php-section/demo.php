@@ -14,7 +14,7 @@ if (!$conn) {
   die("연결 실패: " . mysqli_connect_error());
 }
 
-$sql = "SELECT DISTINCT * FROM jjwifi";
+$sql = "SELECT DISTINCT * FROM jjwifi_inout";
 $result = mysqli_query($conn, $sql);
 $data = array();
 
@@ -27,7 +27,8 @@ if($result){
     'address'=>$row[3],
     'place'=>$row[4],
     'x'=>$row[5],
-    'y'=>$row[6]
+    'y'=>$row[6],
+    'side'=>$row[7]
     ));
   }
   $response = array("jwifi" => $data);
