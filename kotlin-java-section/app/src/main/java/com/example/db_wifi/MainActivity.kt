@@ -27,10 +27,16 @@ import retrofit2.Callback
 import retrofit2.Response
 import com.naver.maps.map.util.MarkerIcons
 import android.Manifest
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.location.Location
+import android.view.View
+import android.view.inputmethod.InputMethodManager
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import androidx.core.app.ActivityCompat
 import com.example.db_wifi.NaverAPI
@@ -79,6 +85,16 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
     //실내 실외 버튼 코드
     private lateinit var indoorBtn : Button
     private lateinit var outdoorBtn : Button
+
+    //검색 기능
+    private lateinit var add_srchBtn : ImageButton
+    private lateinit var autoComplete : AutoCompleteTextView
+    private lateinit var searchList : MutableList<String>
+    private lateinit var LatLngList : MutableList<LatLng>
+    private var index : Int? = 0
+
+    //길찾기 종료
+    private lateinit var finish_loadBtn : Button
 
     // 위치 권한 요청
     private val requestPermissionLauncher =
@@ -135,15 +151,60 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
         indoorBtn = findViewById(R.id.indoor_button)
         outdoorBtn = findViewById(R.id.outdoor_button)
 
+        // 검색 기능
+        add_srchBtn = findViewById(R.id.addressSrchBtn)
+        autoComplete = findViewById(R.id.autoComplete)
 
+        searchList = arrayListOf<String>()
+        LatLngList = arrayListOf<LatLng>()
+
+        // 길찾기 종료 버튼
+        finish_loadBtn = findViewById(R.id.finish_loadBtn)
+        finish_loadBtn.visibility = View.INVISIBLE
+        finish_loadBtn.isClickable = false
+
+
+
+
+        autoComplete.setAdapter(ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, searchList))
+
+        add_srchBtn.setOnClickListener{
+            hideKeyboard()
+            val add_text : String = autoComplete.text.toString()
+            if(correctList(add_text)) {
+                Log.d("검색버튼 디버깅", "결과 값: $add_text")
+                val cameraUpdate = CameraUpdate.scrollAndZoomTo(LatLngList[index!!], 18.0)
+                    .animate(CameraAnimation.Fly, 3000)
+                naverMap.moveCamera(cameraUpdate)
+//                Toast.makeText(this, "검색 성공!", Toast.LENGTH_SHORT).show()
+                drawCircle(LatLngList[index!!])
+                index = 0
+            } else {
+                Toast.makeText(this, "해당 주소를 찾을 수 없습니다", Toast.LENGTH_SHORT).show()
+            }
+            true
+        }
 
         enableEdgeToEdge()
-//        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-//            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-//            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-//            insets
-//        }
+
     }
+
+    //검색 관련
+    private fun correctList(add : String): Boolean {
+        for(listAdd in searchList) {
+            if(add == listAdd)
+                return true
+            index = index?.plus(1)
+        }
+        index = 0
+        return false
+    }
+
+    private fun hideKeyboard() {
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(autoComplete.windowToken, 0)
+    }
+
 
     // 현재위치의 LatLng값을 얻어오는 함수입니다. 필요시 사용하세요! (currentLatLng이 이름으로 변수 선언 후 사용하시면 됩니다)
     private fun fetchCurrentLocation() {
@@ -206,11 +267,11 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                 // 위치가 성공적으로 가져와졌을 때 처리
                 val latitude = location?.latitude ?: 0.0
                 val longitude = location?.longitude ?: 0.0
-                Toast.makeText(
-                    this,
-                    "현재 위치: 위도 $latitude, 경도 $longitude",
-                    Toast.LENGTH_LONG
-                ).show()
+//                Toast.makeText(
+//                    this,
+//                    "현재 위치: 위도 $latitude, 경도 $longitude",
+//                    Toast.LENGTH_LONG
+//                ).show()
             }
             .addOnFailureListener { e ->
                 // 위치 가져오기 실패시 처리
@@ -270,7 +331,10 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                 // 새로운 경로 그리기
                 //더미원소(0.1,0.1) 드랍후 path.coords에 path들을 넣어줌.
                 newPath.coords = path_container.drop(1)
-                newPath.color = Color.GREEN
+                newPath.outlineColor = Color.rgb(16, 67, 159)
+                newPath.color = Color.WHITE
+                newPath.outlineWidth = 10
+//                newPath.patternImage = OverlayImage.fromResource(R.drawable.)
                 newPath.map = naverMap // 경로선 그리기
 
                 // 이후 path를 새로운 객체로 갱신
@@ -282,7 +346,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                         .animate(CameraAnimation.Fly, 3000)
                     naverMap.moveCamera(cameraUpdate)
 
-                    Toast.makeText(this@MainActivity, "경로 안내가 시작됩니다.", Toast.LENGTH_SHORT).show()
+//                    Toast.makeText(this@MainActivity, "경로 안내가 시작됩니다.", Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -396,8 +460,8 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                         }
                     })
 
-                    val in_clusterer: Clusterer<ItemKey> = builder.screenDistance(50.0).build()
-                    val out_clusterer: Clusterer<ItemKey> = builder.screenDistance(50.0).build()
+                    val in_clusterer: Clusterer<ItemKey> = builder.screenDistance(100.0).build()
+                    val out_clusterer: Clusterer<ItemKey> = builder.screenDistance(100.0).build()
 
 
                     naverMapInfo?.let{
@@ -405,27 +469,33 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
                             val lat = it.get(i).y
                             val lnt = it.get(i).x
-                            val s_marker = Marker()
+//                            val s_marker = Marker()
+                            val marker = Marker()
                             // 장소이름 저장
 
                             var s_place = it.get(i).place.toString()
 
+                            //검색 리스트 저장
+                            searchList.add(it.get(i).place)
+//                            val addLatLng : LatLng = LatLng(lat, lnt)
+                            LatLngList.add(LatLng(lat,lnt))
+
                             // 숨겨진 마커
-                            s_marker.position = LatLng(lat, lnt)
-                            coordinates.add(LatLng(lat, lnt)) // 좌표저장
-                            s_marker.map = naverMap
+//                            s_marker.position = LatLng(lat, lnt)
+//                            coordinates.add(LatLng(lat, lnt)) // 좌표저장
+//                            s_marker.map = naverMap
+//
+//                            s_marker.icon = MarkerIcons.BLACK
+//                            s_marker.iconTintColor = Color.RED
+//                            s_marker.width = Marker.SIZE_AUTO
+//                            s_marker.height = Marker.SIZE_AUTO
+//                            s_marker.alpha = 0.0F
+//
+//                            s_marker.captionMinZoom = 14.0
+//                            s_marker.minZoom = 14.0
 
-                            s_marker.icon = MarkerIcons.BLACK
-                            s_marker.iconTintColor = Color.RED
-                            s_marker.width = Marker.SIZE_AUTO
-                            s_marker.height = Marker.SIZE_AUTO
-                            s_marker.alpha = 0.0F
-
-                            s_marker.captionMinZoom = 14.0
-                            s_marker.minZoom = 14.0
-
-                            s_marker.setOnClickListener {
-                                markerPosition = s_marker.position
+                            marker.setOnClickListener {
+                                markerPosition = marker.position
                                 openDrawerWithMarkerInfo(s_place) // 마커에 대한 정보를 슬라이딩 드로어에 표시
                                 true
                             }
@@ -434,7 +504,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 //                            c_marker.position = LatLng(lat,lnt)
 //                            clusterer.add(ItemKey(i,LatLng(lat,lnt)), null)
 //
-                            val marker = Marker()
+//                            val marker = Marker()
                             marker.alpha = 0.0f
                             marker.position = LatLng(it[i].y, it[i].x)
 //
@@ -526,11 +596,20 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
             val longitude1 = markerPosition?.longitude ?: 0.0
 
             val positionString = "Latitude: $currentLatitude, Longitude: $currentLongitude"
-            Toast.makeText(this, positionString, Toast.LENGTH_SHORT).show()
+//            Toast.makeText(this, positionString, Toast.LENGTH_SHORT).show()
 
             //, currentLatitude, currentLongitude
             openNaverMapAppForDirections(currentLatitude, currentLongitude, latitude1, longitude1)
-                Toast.makeText(this, "길찾기", Toast.LENGTH_SHORT).show()
+//            Toast.makeText(this, "길찾기", Toast.LENGTH_SHORT).show()
+
+            finish_loadBtn.visibility = View.VISIBLE
+            finish_loadBtn.isClickable = true
+        }
+        finish_loadBtn.setOnClickListener{
+            path.map = null
+//            Toast.makeText(this,  "경로 안내가 종료 되었습니다.", Toast.LENGTH_SHORT).show()
+            finish_loadBtn.visibility = View.INVISIBLE
+            finish_loadBtn.isClickable = false
         }
     }
     //    companion object {
