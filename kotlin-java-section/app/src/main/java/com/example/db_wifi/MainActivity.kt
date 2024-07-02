@@ -27,6 +27,7 @@ import retrofit2.Callback
 import retrofit2.Response
 import com.naver.maps.map.util.MarkerIcons
 import android.Manifest
+import android.content.ClipData.Item
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -95,6 +96,12 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
     //길찾기 종료
     private lateinit var finish_loadBtn : Button
+
+    // 마커 만들기
+    val start_marker = Marker() // 길찾기 시작 마커
+    val end_marker = Marker() // 길찾기 도착지 마카
+    var isIndoor = false
+    var isOutdoor = false
 
     // 위치 권한 요청
     private val requestPermissionLauncher =
@@ -405,9 +412,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
         // 마커 띄우는 곳!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-        val coordinates = mutableListOf<LatLng>()
         var markerPosition : LatLng? = null
-        val c_marker = Marker()
 
         //클라이언트 객체 생성
         val naverMapApiInterface = NaverMapRequest.getClient().create(NaverMapApiInterface::class.java)
@@ -429,6 +434,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
                     val builder: Clusterer.Builder<ItemKey> = Clusterer.Builder<ItemKey>()
 
+
                     builder.clusterMarkerUpdater(object : DefaultClusterMarkerUpdater() {
                         override fun updateClusterMarker(info: ClusterMarkerInfo, marker: Marker) {
                             super.updateClusterMarker(info, marker)
@@ -439,15 +445,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                             marker.captionTextSize = 25f
                             marker.captionColor = Color.rgb(100, 12, 12)
                             marker.captionText = info.size.toString()
-                            /*
-                            marker.icon = if(info.size < 3) {
-                                MarkerIcons.CLUSTER_LOW_DENSITY
-                            }
 
-                            else {
-                                MarkerIcons.CLUSTER_MEDIUM_DENSITY
-                            }
-                            */
                         }
                     }).leafMarkerUpdater(object : DefaultLeafMarkerUpdater() {
                         override fun updateLeafMarker(info: LeafMarkerInfo, marker: Marker) {
@@ -463,7 +461,9 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                     val in_clusterer: Clusterer<ItemKey> = builder.screenDistance(100.0).build()
                     val out_clusterer: Clusterer<ItemKey> = builder.screenDistance(100.0).build()
 
-
+                    // 길찾기 클러스터
+                    val start_clusterer: Clusterer<ItemKey> = builder.screenDistance(100.0).build()
+                    val end_clusterer: Clusterer<ItemKey> = builder.screenDistance(100.0).build()
                     naverMapInfo?.let{
                         for(i in 0 until it.size){
 
@@ -480,31 +480,12 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 //                            val addLatLng : LatLng = LatLng(lat, lnt)
                             LatLngList.add(LatLng(lat,lnt))
 
-                            // 숨겨진 마커
-//                            s_marker.position = LatLng(lat, lnt)
-//                            coordinates.add(LatLng(lat, lnt)) // 좌표저장
-//                            s_marker.map = naverMap
-//
-//                            s_marker.icon = MarkerIcons.BLACK
-//                            s_marker.iconTintColor = Color.RED
-//                            s_marker.width = Marker.SIZE_AUTO
-//                            s_marker.height = Marker.SIZE_AUTO
-//                            s_marker.alpha = 0.0F
-//
-//                            s_marker.captionMinZoom = 14.0
-//                            s_marker.minZoom = 14.0
-
                             marker.setOnClickListener {
                                 markerPosition = marker.position
                                 openDrawerWithMarkerInfo(s_place) // 마커에 대한 정보를 슬라이딩 드로어에 표시
                                 true
                             }
 
-                            // 클러스터링 마커
-//                            c_marker.position = LatLng(lat,lnt)
-//                            clusterer.add(ItemKey(i,LatLng(lat,lnt)), null)
-//
-//                            val marker = Marker()
                             marker.alpha = 0.0f
                             marker.position = LatLng(it[i].y, it[i].x)
 //
@@ -517,6 +498,8 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                         }
                     }
                     indoorBtn.setOnClickListener {
+                        isIndoor = true
+                        isOutdoor = false
                         // 모든 야외 마커 숨기기
                         outdoorMarkers.forEach { it.map = null }
                         // 모든 실내 마커 표시하기
@@ -529,6 +512,8 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                     }
 
                     outdoorBtn.setOnClickListener {
+                        isOutdoor = true
+                        isIndoor = false
                         // 모든 실내 마커 숨기기
                         indoorMarkers.forEach { it.map = null }
                         // 모든 야외 마커 표시하기
@@ -540,6 +525,95 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                         out_clusterer.map = naverMap
                         in_clusterer.map = null
                     }
+
+                    // 경로찾기 버튼 클릭
+                    search_loadBtn.setOnClickListener{
+                        start_clusterer.clear()
+                        end_clusterer.clear()
+//            fetchCurrentLocation()
+                        // 현재위치
+                        currentLatitude = currentLatLng?.latitude ?: 0.0
+                        currentLongitude = currentLatLng?.longitude ?: 0.0
+
+                        // 마커 포지션
+                        val latitude1 = markerPosition?.latitude ?: 0.0
+                        val longitude1 = markerPosition?.longitude ?: 0.0
+
+                        val positionString = "Latitude: $currentLatitude, Longitude: $currentLongitude"
+
+                        openNaverMapAppForDirections(currentLatitude, currentLongitude, latitude1, longitude1)
+
+                        finish_loadBtn.visibility = View.VISIBLE
+                        finish_loadBtn.isClickable = true
+
+                        // 출발지, 도착지 마커
+
+
+                        start_marker.position = LatLng(currentLatitude, currentLongitude)
+//                        start_marker.map = naverMap
+                        start_clusterer.add(ItemKey(start_marker.hashCode(), start_marker.position), null)
+                        start_clusterer.map = naverMap
+
+                        end_marker.position = LatLng(latitude1,longitude1)
+//                        end_marker.map = naverMap
+                        end_clusterer.add(ItemKey(end_marker.hashCode(), end_marker.position), null)
+                        end_clusterer.map = naverMap
+
+
+//                        if(out_clusterer.contains(ItemKey(end_marker.hashCode(), end_marker.position))){
+//                            Toast.makeText(this@MainActivity,  "외부마커.", Toast.LENGTH_SHORT).show()
+//                        } else if(in_clusterer.contains(ItemKey(end_marker.hashCode(), end_marker.position))){
+//                            Toast.makeText(this@MainActivity,  "내부마커.", Toast.LENGTH_SHORT).show()
+//                        } else{
+//                            Toast.makeText(this@MainActivity,  "이상해.", Toast.LENGTH_SHORT).show()
+//                        }
+
+//                        if(isOutdoor){
+//                            outdoorMarkers.forEach{
+//                                if(it.position == end_marker.position){
+//                                    Toast.makeText(this@MainActivity,  "외부마커.", Toast.LENGTH_SHORT).show()
+//                                }
+//                            }
+//                        } else if(isIndoor){
+//                            indoorMarkers.forEach{
+//                                if(it.position == end_marker.position){
+//                                    Toast.makeText(this@MainActivity,  "내부마커.", Toast.LENGTH_SHORT).show()
+//                                }
+//                            }
+//                        } else{
+//                            Toast.makeText(this@MainActivity, "이상해.", Toast.LENGTH_SHORT).show()
+//                        }
+
+
+                        indoorMarkers.forEach { it.map = null }
+                        outdoorMarkers.forEach{ it.map = null}
+                        out_clusterer.map = null
+                        in_clusterer.map = null
+
+                    }
+
+                    // 경로찾기 종료
+                    finish_loadBtn.setOnClickListener{
+                        start_marker.map = null
+                        end_marker.map = null
+                        path.map = null
+                        if(isIndoor){
+                            indoorMarkers.forEach { it.map = naverMap }
+                            in_clusterer.map = naverMap
+                        }
+                        if(isOutdoor){
+                            outdoorMarkers.forEach{ it.map = naverMap}
+                            out_clusterer.map = naverMap
+                        }
+                        start_clusterer.clear()
+                        end_clusterer.clear()
+
+
+//            Toast.makeText(this,  "경로 안내가 종료 되었습니다.", Toast.LENGTH_SHORT).show()
+                        finish_loadBtn.visibility = View.INVISIBLE
+                        finish_loadBtn.isClickable = false
+                    }
+
 
                 }
             }
@@ -586,33 +660,6 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
         non_scaleBtn.setOnClickListener{
             removeCircle()
         }
-        search_loadBtn.setOnClickListener{
-//            fetchCurrentLocation()
-            currentLatitude = currentLatLng?.latitude ?: 0.0
-            currentLongitude = currentLatLng?.longitude ?: 0.0
-
-            // 마커 포지션
-            val latitude1 = markerPosition?.latitude ?: 0.0
-            val longitude1 = markerPosition?.longitude ?: 0.0
-
-            val positionString = "Latitude: $currentLatitude, Longitude: $currentLongitude"
-//            Toast.makeText(this, positionString, Toast.LENGTH_SHORT).show()
-
-            //, currentLatitude, currentLongitude
-            openNaverMapAppForDirections(currentLatitude, currentLongitude, latitude1, longitude1)
-//            Toast.makeText(this, "길찾기", Toast.LENGTH_SHORT).show()
-
-            finish_loadBtn.visibility = View.VISIBLE
-            finish_loadBtn.isClickable = true
-        }
-        finish_loadBtn.setOnClickListener{
-            path.map = null
-//            Toast.makeText(this,  "경로 안내가 종료 되었습니다.", Toast.LENGTH_SHORT).show()
-            finish_loadBtn.visibility = View.INVISIBLE
-            finish_loadBtn.isClickable = false
-        }
     }
-    //    companion object {
-//        private const val LOCATION_PERMISSION_REQUEST_CODE = 100
-//    }
+
 }
