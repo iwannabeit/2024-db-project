@@ -461,6 +461,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                     val in_clusterer: Clusterer<ItemKey> = builder.screenDistance(100.0).build()
                     val out_clusterer: Clusterer<ItemKey> = builder.screenDistance(100.0).build()
 
+
                     // 길찾기 클러스터
                     val start_clusterer: Clusterer<ItemKey> = builder.screenDistance(100.0).build()
                     val end_clusterer: Clusterer<ItemKey> = builder.screenDistance(100.0).build()
@@ -480,12 +481,33 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 //                            val addLatLng : LatLng = LatLng(lat, lnt)
                             LatLngList.add(LatLng(lat,lnt))
 
+
+                            // 숨겨진 마커
+//                            s_marker.position = LatLng(lat, lnt)
+//                            coordinates.add(LatLng(lat, lnt)) // 좌표저장
+//                            s_marker.map = naverMap
+//
+//                            s_marker.icon = MarkerIcons.BLACK
+//                            s_marker.iconTintColor = Color.RED
+//                            s_marker.width = Marker.SIZE_AUTO
+//                            s_marker.height = Marker.SIZE_AUTO
+//                            s_marker.alpha = 0.0F
+//
+//                            s_marker.captionMinZoom = 14.0
+//                            s_marker.minZoom = 14.0
+
                             marker.setOnClickListener {
                                 markerPosition = marker.position
                                 openDrawerWithMarkerInfo(s_place) // 마커에 대한 정보를 슬라이딩 드로어에 표시
                                 true
                             }
 
+
+                            // 클러스터링 마커
+//                            c_marker.position = LatLng(lat,lnt)
+//                            clusterer.add(ItemKey(i,LatLng(lat,lnt)), null)
+//
+//                            val marker = Marker()
                             marker.alpha = 0.0f
                             marker.position = LatLng(it[i].y, it[i].x)
 //
@@ -659,6 +681,13 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
         }
         non_scaleBtn.setOnClickListener{
             removeCircle()
+        }
+
+        finish_loadBtn.setOnClickListener{
+            path.map = null
+//            Toast.makeText(this,  "경로 안내가 종료 되었습니다.", Toast.LENGTH_SHORT).show()
+            finish_loadBtn.visibility = View.INVISIBLE
+            finish_loadBtn.isClickable = false
         }
     }
 
