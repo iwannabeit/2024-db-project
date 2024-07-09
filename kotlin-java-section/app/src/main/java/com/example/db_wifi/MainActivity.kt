@@ -28,6 +28,7 @@ import retrofit2.Response
 import com.naver.maps.map.util.MarkerIcons
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.location.Location
@@ -56,7 +57,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 //import com.naver.maps.map.CameraUpdate
-class MainActivity : FragmentActivity(), OnMapReadyCallback {
+open class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
     private var naverMapInfo: List<NaverMapData>? = null
     private var naverMapList: NaverMapItem? = null
@@ -74,6 +75,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
     private lateinit var search_loadBtn : Button
     private lateinit var scaleBtn : Button
     private lateinit var non_scaleBtn : Button
+    private lateinit var mywifi_Btn : Button // 내 와이파이 버튼
 
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<LinearLayout>
 
@@ -146,6 +148,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
         search_loadBtn = findViewById(R.id.search_loadBtn)
         scaleBtn = findViewById(R.id.scaleBtn)
         non_scaleBtn = findViewById(R.id.non_scaleBtn)
+        mywifi_Btn = findViewById(R.id.mywifi_button)
 
         // 내부,외부 마커
         indoorBtn = findViewById(R.id.indoor_button)
@@ -610,6 +613,10 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 //            Toast.makeText(this,  "경로 안내가 종료 되었습니다.", Toast.LENGTH_SHORT).show()
             finish_loadBtn.visibility = View.INVISIBLE
             finish_loadBtn.isClickable = false
+        }
+        mywifi_Btn.setOnClickListener{ // 내 와이파이 리스트를 보는 버튼
+            val intent = Intent(this@MainActivity, SecondActivity::class.java)
+            startActivity(intent)
         }
     }
     //    companion object {

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main2"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".PlusActivity">
+
+
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/main_drawer2">
+
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/map2"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:name="com.naver.maps.map.MapFragment" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_anchor="@+id/map2"
+            app:layout_anchorGravity="center">
+
+            <EditText
+                android:id="@+id/myWifi_name"
+                android:layout_width="240dp"
+                android:layout_height="50dp"
+                android:hint="와이파이 이름"
+                android:layout_marginTop="60dp"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:completionThreshold="1"
+                android:gravity="center_vertical"
+                android:textColorHint="#555555"
+                android:textColor="#000000"
+                android:paddingStart="8dp"
+                android:elevation="1dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/close_Btn"
+                app:layout_constraintEnd_toStartOf="@id/addWifi_Btn"
+                app:layout_constraintHorizontal_bias="0"
+                android:background="@drawable/rounded_corner_bg"
+                tools:ignore="MissingConstraints" />
+
+            <ImageButton
+                android:id="@+id/addWifi_Btn"
+                android:layout_width="60dp"
+                android:layout_height="50dp"
+                android:src="@drawable/add_srchbtn"
+                android:layout_marginTop="60dp"
+                android:layout_marginEnd="20dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:background="@drawable/rounded_srchbtn"
+                android:scaleType="fitCenter" />
+
+            <ImageButton
+                android:id="@+id/close_Btn"
+                android:layout_width="60dp"
+                android:layout_height="50dp"
+                android:src="@drawable/add_srchbtn"
+                android:layout_marginTop="60dp"
+                android:layout_marginStart="20dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/myWifi_name"
+                android:background="@drawable/rounded_srchbtn"
+                android:scaleType="fitCenter" />
+
+            <!-- 십자선을 그릴 View -->
+            <View
+                android:id="@+id/verticalLine"
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="@android:color/black"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <View
+                android:id="@+id/horizontalLine"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/black"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+</LinearLayout>
