@@ -80,11 +80,26 @@
                 android:id="@+id/outdoor_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="15dp"
-                android:layout_marginEnd="20dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginEnd="16dp"
                 android:background="@drawable/rounded_button"
                 android:fontFamily="@font/gmarketsansttfmedium"
                 android:text="실외"
+                android:textColor="#000000"
+                android:textSize="22sp"
+                app:layout_constraintEnd_toEndOf="parent"
+
+                app:layout_constraintTop_toBottomOf="@id/indoor_button" />
+
+            <Button
+                android:id="@+id/new_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="108dp"
+                android:layout_marginEnd="20dp"
+                android:background="@drawable/rounded_button"
+                android:fontFamily="@font/gmarketsansttfmedium"
+                android:text="추가"
                 android:textColor="#000000"
                 android:textSize="22sp"
                 app:layout_constraintEnd_toEndOf="parent"
