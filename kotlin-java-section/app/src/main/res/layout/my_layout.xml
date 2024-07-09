@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/my_layout"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:orientation="horizontal">
+        <android.widget.Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="뒤로 가기"
+            android:layout_marginLeft="5dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"
+            android:fontFamily="@font/gmarketsansttfmedium"
+            android:background="@drawable/rounded_button"
+            android:textColor="#000000"
+            android:id="@+id/backMain_Btn" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginLeft="50dp"
+            android:fontFamily="@font/gmarketsansttfmedium"
+            android:gravity="center"
+            android:text="내 와이파이 목록"
+            android:textColor="#000000"
+            android:textSize="17sp"
+            app:layout_constraintLeft_toRightOf="@id/backMain_Btn" />
+
+
+    </LinearLayout>
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/white">
+
+            <LinearLayout
+                android:id="@+id/wifi_info"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="10dp"
+                android:background="@drawable/linear_layout_border">
+            </LinearLayout>
+
+        </ScrollView>
+            <android.widget.Button
+                android:id="@+id/plusBtn"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginBottom="35dp"
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/red_circle"
+                android:fontFamily="@font/gmarketsansttfmedium"
+                android:text="+"
+                android:textSize="50sp"
+                android:textColor="#FFFFFF"
+                android:layout_gravity="bottom|end"
+                android:backgroundTint="@color/red"
+                android:padding="0dp"
+                android:gravity="center" />
+
+
+            <android.widget.Button
+                android:id="@+id/delete_Btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="35dp"
+                android:background="@drawable/rounded_srchbtn"
+                android:fontFamily="@font/gmarketsansttfmedium"
+                android:layout_gravity="bottom|center"
+                android:text="제거"
+                android:textColor="#FFFFFF" />
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+</LinearLayout>
