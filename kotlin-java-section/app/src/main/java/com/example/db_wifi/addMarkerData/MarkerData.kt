@@ -1,4 +1,5 @@
-package com.example.db_wifi.addMarker
+package com.example.db_wifi
+
 import com.google.gson.annotations.SerializedName
 
 data class MarkerData(

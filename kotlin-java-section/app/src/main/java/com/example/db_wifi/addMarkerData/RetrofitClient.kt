@@ -1,5 +1,6 @@
-package com.example.db_wifi.addMarker
+package com.example.db_wifi.addMarkerData
 
+import com.example.db_wifi.MarkerApiService
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -15,3 +16,4 @@ object RetrofitClient {
 
     val markerApiService: MarkerApiService = retrofit.create(MarkerApiService::class.java)
 }
+

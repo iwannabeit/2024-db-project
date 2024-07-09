@@ -1,9 +1,3 @@
-import android.util.Log
-import com.example.db_wifi.addMarker.MarkerData
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-
 //// -------------------------------
 //// 예시로 데이터 생성
 //val latitude = 127.442
