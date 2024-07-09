@@ -15,3 +15,12 @@ data class Result_path(
 data class Result_distance(
     val distance : Int
 )
+
+data class Summary(
+    val start: Point,
+    val goal: Point
+)
+
+data class Point(
+    val location: List<Double>
+)

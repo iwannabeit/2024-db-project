@@ -1,4 +1,4 @@
-package com.example.db_wifi
+package com.example.db_wifi.addMarkerControll
 
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
@@ -26,15 +26,20 @@ import android.location.Location
 import android.widget.EditText
 import android.widget.ImageButton
 import androidx.core.app.ActivityCompat
+import com.example.db_wifi.R
+import com.naver.maps.map.CameraAnimation
+import com.naver.maps.map.CameraUpdate
 import com.naver.maps.map.overlay.Marker
 import java.io.BufferedReader
+import java.io.BufferedWriter
 import java.io.File
-import java.io.FileOutputStream
 import java.io.FileReader
+import java.io.FileWriter
 import java.io.IOException
+import kotlin.properties.Delegates
 
 
-class PlusActivity : FragmentActivity(), OnMapReadyCallback {
+class EditActivity : FragmentActivity(), OnMapReadyCallback {
 
     // FusedLocationProviderClient는 manifest에서 위치권한 얻은 후 사용할 수 있습니다!
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -46,15 +51,16 @@ class PlusActivity : FragmentActivity(), OnMapReadyCallback {
     private var currentLatLng : LatLng? = null
 
     //버튼들
-    private lateinit var addWifi_Btn : ImageButton
+    private lateinit var editWifi_Btn : ImageButton
     private lateinit var close_Btn : ImageButton
     private lateinit var myWifi_name : EditText
 
     // txt파일
     private val FILENAME: String = "wifi_data.txt"
 
-    // intent를 통해 가져온 배열
-    private lateinit var wifiDataList: ArrayList<WifiLocation>
+    // intent를 통해 가져온 WifiLoelqjcation
+    private lateinit var EditWifi : WifiLocation
+    private var LineIndex by Delegates.notNull<Int>()
 
     // 위치 권한 요청
     private val requestPermissionLauncher =
@@ -78,13 +84,11 @@ class PlusActivity : FragmentActivity(), OnMapReadyCallback {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         locationSource = FusedLocationSource(this, LOCATION_PERMISSION_REQUEST_CODE)
 
-        wifiDataList = intent.getSerializableExtra("wifiDataList") as ArrayList<WifiLocation>
-        Log.d("WifiData2", "Size: ${wifiDataList.size}")
+        EditWifi = intent.getSerializableExtra("EditWifi") as WifiLocation
+        LineIndex = intent.getIntExtra("LineIndex", -1)
+        // 잘 가져왔는지 확인
+        Log.d("EditWifi", "${EditWifi.name}, ${EditWifi.latitude}, ${EditWifi.longitude}, $LineIndex")
 
-        // wifiDataList를 잘 가져왔는지 log를 통해 확인, 필요시 주석 처리 해도 됩니다.
-        for (wifiData in wifiDataList) {
-            Log.d("WifiData2", "${wifiData.name} Latitude: ${wifiData.latitude}, Longitude: ${wifiData.longitude}")
-        }
 
         // 위치 권한 확인
         checkLocationPermission()
@@ -100,9 +104,11 @@ class PlusActivity : FragmentActivity(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
 
 
-        addWifi_Btn = findViewById(R.id.addWifi_Btn)
+        editWifi_Btn = findViewById(R.id.addWifi_Btn)
         close_Btn = findViewById(R.id.close_Btn)
         myWifi_name = findViewById(R.id.myWifi_name)
+
+        myWifi_name.setText(EditWifi.name)
 
         enableEdgeToEdge()
     }
@@ -202,9 +208,10 @@ class PlusActivity : FragmentActivity(), OnMapReadyCallback {
         // 현재 위치 위도, 경도 저장
         fetchCurrentLocation()
 
-        for (wifiData in wifiDataList) {
-            addMarkerToMap(wifiData.latitude, wifiData.longitude, wifiData.name)
-        }
+        addMarkerToMap(EditWifi.latitude, EditWifi.longitude, EditWifi.name)
+        val cameraUpdate = CameraUpdate.scrollTo(LatLng(EditWifi.latitude, EditWifi.longitude))
+            .animate(CameraAnimation.None, 3000)
+        naverMap.moveCamera(cameraUpdate)
 
         lateinit var center : LatLng
         naverMap.addOnCameraChangeListener { _, _ ->
@@ -212,7 +219,7 @@ class PlusActivity : FragmentActivity(), OnMapReadyCallback {
             center = naverMap.cameraPosition.target
         }
 
-        addWifi_Btn.setOnClickListener {
+        editWifi_Btn.setOnClickListener {
             showSaveConfirmationDialog(center)
             // 현재위치도 같이 확인
 //            fetchCurrentLocation()
@@ -221,7 +228,7 @@ class PlusActivity : FragmentActivity(), OnMapReadyCallback {
 //            Log.d("FileContents", "Latitude: $currentLatitude, Longitude: $currentLongitude")
         }
         close_Btn.setOnClickListener {
-            val intent = Intent(this@PlusActivity, SecondActivity::class.java)
+            val intent = Intent(this@EditActivity, SecondActivity::class.java)
             startActivity(intent)
         }
     }
@@ -231,20 +238,6 @@ class PlusActivity : FragmentActivity(), OnMapReadyCallback {
         marker.position = LatLng(latitude, longitude)
         marker.map = naverMap
         marker.captionText = title
-    }
-
-    // txt파일에 wifi정보 저장
-    private fun saveToFile(wifiName: String, latitude: Double, longitude: Double) {
-        val fileContent = "$wifiName - $latitude, $longitude\n"
-        try {
-            FileOutputStream(File(filesDir, FILENAME), true).use {
-                it.write(fileContent.toByteArray())
-                Toast.makeText(this, "WIFI저장을 완료했습니다.", Toast.LENGTH_SHORT).show()
-            }
-        } catch (e: IOException) {
-            Toast.makeText(this, "파일 저장에 실패했습니다.", Toast.LENGTH_SHORT).show()
-            Log.e("FileIO", "Error writing to file $FILENAME: ${e.message}")
-        }
     }
 
     // 내부 저장소 안에 wifi_data.txt의 내용을 확인하는 함수 (log를 통해)
@@ -272,19 +265,18 @@ class PlusActivity : FragmentActivity(), OnMapReadyCallback {
         val wifiName = myWifi_name.text.toString()
         AlertDialog.Builder(this)
             .setTitle(wifiName)
-            .setMessage("Wi-Fi 정보를 저장하시겠습니까?")
-            .setPositiveButton("저장") { dialogInterface: DialogInterface, i: Int ->
+            .setMessage("Wi-Fi 정보를 변경하시겠습니까?")
+            .setPositiveButton("변경") { dialogInterface: DialogInterface, i: Int ->
                 center?.let {
-                    saveToFile(wifiName, it.latitude, it.longitude)
+                    // 기존 EidtWifi의 lat, lng를 center의 값으로 변경
+                    val newWifiLocation = WifiLocation(wifiName, it.latitude, it.longitude)
+                    EditWifi = newWifiLocation
+
+                    // txt 파일 업데이트
+                    updateFile()
                 }
-                // 중심 위치를 잘 가져왔나 확인 용
-                //            Toast.makeText(
-//                this,
-//                "지도 중심 위치: 위도 ${center.latitude}, 경도 ${center.longitude}",
-//                Toast.LENGTH_SHORT
-//            ).show()
                 printFileContents() //log를 통해 내부 저장소의 txt내용을 알기 위한 함수이므로 필요 없으면 주석 처리 해도 됩니다.
-                val intent = Intent(this@PlusActivity, SecondActivity::class.java)
+                val intent = Intent(this@EditActivity, SecondActivity::class.java)
                 startActivity(intent)
 
             }
@@ -293,4 +285,49 @@ class PlusActivity : FragmentActivity(), OnMapReadyCallback {
             }
             .show()
     }
+
+    private fun updateFile() {
+        try {
+            val file = File(filesDir, FILENAME)
+            val tempFile = File(filesDir, "temp_$FILENAME")
+
+            val bufferedReader = BufferedReader(FileReader(file))
+            val bufferedWriter = BufferedWriter(FileWriter(tempFile))
+
+            var line: String? = bufferedReader.readLine()
+            var lineNumber = 0
+
+            while (line != null) {
+                if (lineNumber == LineIndex) {
+                    // 해당 라인 수정
+                    val updatedLine = "${EditWifi.name} - ${EditWifi.latitude}, ${EditWifi.longitude}"
+                    bufferedWriter.write(updatedLine)
+                } else {
+                    // 기존 라인 그대로 쓰기
+                    bufferedWriter.write(line)
+                }
+                bufferedWriter.newLine()
+
+                lineNumber++
+                line = bufferedReader.readLine()
+            }
+
+            bufferedWriter.close()
+            bufferedReader.close()
+
+            // 기존 파일 삭제 후 임시 파일을 기존 파일 이름으로 변경
+            if (!file.delete()) {
+                Log.d("Update File", "Could not delete file")
+                return
+            }
+
+            if (!tempFile.renameTo(file)) {
+                Log.d("Update File", "Could not rename file")
+            }
+
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+    }
+
 }

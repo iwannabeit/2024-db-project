@@ -1,4 +1,4 @@
-package com.example.db_wifi
+package com.example.db_wifi.addMarkerControll
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -13,16 +13,14 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.marginRight
-import com.google.android.material.internal.ViewUtils.dpToPx
+import com.example.db_wifi.MainActivity
+import com.example.db_wifi.R
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
 import java.io.IOException
-import java.io.Serializable
-
 
 
 class SecondActivity : AppCompatActivity() {
