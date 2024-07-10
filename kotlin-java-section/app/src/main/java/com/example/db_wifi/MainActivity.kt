@@ -40,6 +40,7 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import androidx.core.app.ActivityCompat
 import com.example.db_wifi.addMarkerControll.SecondActivity
+import com.example.db_wifi.addMarkerControll.WifiLocation
 import com.example.db_wifi.addMarkerData.RetrofitClient
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.naver.maps.map.CameraAnimation
@@ -54,7 +55,13 @@ import com.naver.maps.map.overlay.PathOverlay
 import com.naver.maps.map.overlay.PolygonOverlay
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-
+import java.io.BufferedReader
+import java.io.BufferedWriter
+import java.io.File
+import java.io.FileReader
+import java.io.FileWriter
+import java.io.IOException
+import java.io.Serializable
 
 
 //import com.naver.maps.map.CameraUpdate
@@ -97,6 +104,8 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
     //실내 실외 버튼 코드
     private lateinit var indoorBtn : Button
     private lateinit var outdoorBtn : Button
+    private lateinit var myBtn : Button
+
 
     //검색 기능
     private lateinit var add_srchBtn : ImageButton
@@ -110,9 +119,10 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
     // 마커 만들기
     val start_marker = Marker() // 길찾기 시작 마커
-    val end_marker = Marker() // 길찾기 도착지 마카
+    val end_marker = Marker() // 길찾기 도착지 마커
     var isIndoor = false
     var isOutdoor = false
+    var isMyMarker = false
 
     // 위치 권한 요청
     private val requestPermissionLauncher =
@@ -196,6 +206,7 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
         // 내부,외부 마커
         indoorBtn = findViewById(R.id.indoor_button)
         outdoorBtn = findViewById(R.id.outdoor_button)
+        myBtn = findViewById(R.id.myw_button)
 
         // 검색 기능
         add_srchBtn = findViewById(R.id.addressSrchBtn)
@@ -438,6 +449,45 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
     }
 
 
+    // ====================================================================================
+    // 내가 추가한 마커 리스트 불러오는 함수
+    private val wifiDataList = mutableListOf<WifiLocation>()
+    private fun loadFile(){
+        try {
+            val inputStream = openFileInput("wifi_data.txt")
+            val inputStreamReader = inputStream.reader()
+            val bufferedReader = BufferedReader(inputStreamReader)
+            var line: String? = bufferedReader.readLine()
+            while (line != null) {
+
+                val wifiLatLng = extractWifiLocationFromLine(line)
+                wifiDataList.add(wifiLatLng)
+
+                line = bufferedReader.readLine()
+            }
+//            wifiDataList.forEach {
+//                Toast.makeText(this, "${it.name}", Toast.LENGTH_SHORT).show()
+//            }
+            bufferedReader.close()
+        } catch (e: IOException) {
+            Toast.makeText(this, "실패", Toast.LENGTH_SHORT).show()
+            e.printStackTrace()
+        }
+//        return wifiDataList
+    }
+
+    private fun extractWifiLocationFromLine(line: String): WifiLocation {
+        // '-'를 기준으로 이름과 좌표를 분리
+        val parts = line.split(" - ")
+        // 첫 번째 요소가 이름
+        val name = parts[0]
+        val coordinates = parts[1].split(", ")
+        val latitude = coordinates[0].toDouble()
+        val longitude = coordinates[1].toDouble()
+
+        return WifiLocation(name, latitude, longitude)
+    }
+
     override fun onMapReady(naverMap: NaverMap) {
         this.naverMap = naverMap // naverMap 변수 초기화
         naverMap.isIndoorEnabled = true // 실내지도
@@ -450,6 +500,8 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
         fetchCurrentLocation()
 //        currentLatitude = currentLatLng?.latitude ?: 0.0
 //        currentLongitude = currentLatLng?.longitude ?: 0.0
+
+        val secondActivity = SecondActivity()
 
 
         // 마커 띄우는 곳!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -477,6 +529,7 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
                     val indoorMarkers = mutableListOf<Marker>()
                     val outdoorMarkers = mutableListOf<Marker>()
+                    val myMarkers = mutableListOf<Marker>()
 
                     val builder: Clusterer.Builder<ItemKey> = Clusterer.Builder<ItemKey>()
 
@@ -532,8 +585,6 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
                                 true
                             }
 
-
-
                             marker.alpha = 0.0f
                             marker.position = LatLng(it[i].y, it[i].x)
 //
@@ -543,13 +594,18 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
                             else{
                                 outdoorMarkers.add(marker)
                             }
+
+
                         }
                     }
                     indoorBtn.setOnClickListener {
                         isIndoor = true
                         isOutdoor = false
+                        isMyMarker = false
                         // 모든 야외 마커 숨기기
                         outdoorMarkers.forEach { it.map = null }
+                        // 내 마커 숨기기
+                        myMarkers.forEach{ it.map = null }
                         // 모든 실내 마커 표시하기
                         indoorMarkers.forEach {
                             it.map = naverMap
@@ -564,6 +620,8 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
                         isIndoor = false
                         // 모든 실내 마커 숨기기
                         indoorMarkers.forEach { it.map = null }
+                        // 내 마커 숨기기
+                        myMarkers.forEach{ it.map = null }
                         // 모든 야외 마커 표시하기
                         outdoorMarkers.forEach {
                             it.map = naverMap
@@ -572,6 +630,23 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
                         out_clusterer.map = naverMap
                         in_clusterer.map = null
+                    }
+
+                    myBtn.setOnClickListener{
+                        isIndoor = false
+                        isOutdoor = false
+                        out_clusterer.map = null
+                        in_clusterer.map = null
+                        loadFile()
+                        wifiDataList.forEach{data ->
+                            val myMarker = Marker() // 내가 설정한 마커
+                            myMarker.position = LatLng(data.latitude,data.longitude)
+                            myMarkers.add(myMarker)
+                        }
+                        // 마커 표시
+                        myMarkers.forEach{ it.map = naverMap }
+
+
                     }
 
                     // 경로찾기 버튼 클릭
