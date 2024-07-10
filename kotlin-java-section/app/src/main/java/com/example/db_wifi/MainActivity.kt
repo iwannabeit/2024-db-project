@@ -454,6 +454,7 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
     private val wifiDataList = mutableListOf<WifiLocation>()
     private fun loadFile(){
         try {
+            Toast.makeText(this, "MY WIFI", Toast.LENGTH_SHORT).show()
             val inputStream = openFileInput("wifi_data.txt")
             val inputStreamReader = inputStream.reader()
             val bufferedReader = BufferedReader(inputStreamReader)
@@ -559,6 +560,7 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
                     val in_clusterer: Clusterer<ItemKey> = builder.screenDistance(100.0).build()
                     val out_clusterer: Clusterer<ItemKey> = builder.screenDistance(100.0).build()
+                    val my_clusterer: Clusterer<ItemKey> = builder.screenDistance(100.0).build()
 
 
                     // 길찾기 클러스터
@@ -613,6 +615,8 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
                         }
                         out_clusterer.map = null
                         in_clusterer.map = naverMap
+                        my_clusterer.map = null
+
                     }
 
                     outdoorBtn.setOnClickListener {
@@ -630,24 +634,42 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
                         out_clusterer.map = naverMap
                         in_clusterer.map = null
+                        my_clusterer.map = null
+
                     }
 
-                    myBtn.setOnClickListener{
+                    myBtn.setOnClickListener {
                         isIndoor = false
                         isOutdoor = false
                         out_clusterer.map = null
                         in_clusterer.map = null
+                        my_clusterer.map = null
+
+                        myMarkers.forEach { it.map = null }
+                        myMarkers.clear()
+
                         loadFile()
-                        wifiDataList.forEach{data ->
+
+                        wifiDataList.forEach { data ->
                             val myMarker = Marker() // 내가 설정한 마커
-                            myMarker.position = LatLng(data.latitude,data.longitude)
+                            myMarker.position = LatLng(data.latitude, data.longitude)
+
+                            myMarker.alpha = 0.0f
+                            myMarker.setOnClickListener {
+                                markerPosition = myMarker.position
+                                openDrawerWithMarkerInfo(data.name) // 마커에 대한 정보를 슬라이딩 드로어에 표시
+                                true
+                            }
+                            my_clusterer.add(ItemKey(data.hashCode(), myMarker.position), null)
+
                             myMarkers.add(myMarker)
                         }
+
                         // 마커 표시
-                        myMarkers.forEach{ it.map = naverMap }
-
-
+                        myMarkers.forEach { it.map = naverMap }
+                        my_clusterer.map = naverMap
                     }
+
 
                     // 경로찾기 버튼 클릭
                     search_loadBtn.setOnClickListener{
@@ -683,8 +705,10 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
                         indoorMarkers.forEach { it.map = null }
                         outdoorMarkers.forEach{ it.map = null}
+                        myMarkers.forEach{ it.map = null}
                         out_clusterer.map = null
                         in_clusterer.map = null
+                        my_clusterer.map = null
 
                     }
 
