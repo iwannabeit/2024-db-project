@@ -23,10 +23,13 @@ import android.app.AlertDialog
 import android.content.DialogInterface
 import android.content.Intent
 import android.location.Location
+import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import androidx.core.app.ActivityCompat
 import com.example.db_wifi.R
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.naver.maps.map.overlay.Marker
 import java.io.BufferedReader
 import java.io.File
@@ -50,12 +53,16 @@ class PlusActivity : FragmentActivity(), OnMapReadyCallback {
     private lateinit var addWifi_Btn : ImageButton
     private lateinit var close_Btn : ImageButton
     private lateinit var myWifi_name : EditText
+    private lateinit var pw_Btn : ImageButton
+    private lateinit var ps_text : EditText
 
     // txt파일
     private val FILENAME: String = "wifi_data.txt"
 
     // intent를 통해 가져온 배열
     private lateinit var wifiDataList: ArrayList<WifiLocation>
+
+    private lateinit var ps_bottom_sheet : BottomSheetBehavior<LinearLayout>
 
     // 위치 권한 요청
     private val requestPermissionLauncher =
@@ -104,6 +111,12 @@ class PlusActivity : FragmentActivity(), OnMapReadyCallback {
         addWifi_Btn = findViewById(R.id.addWifi_Btn)
         close_Btn = findViewById(R.id.close_Btn)
         myWifi_name = findViewById(R.id.myWifi_name)
+        pw_Btn = findViewById(R.id.pw_Btn)
+        ps_text = findViewById(R.id.ps_text)
+
+        val bottomSheet = findViewById<LinearLayout>(R.id.ps_bottom_sheet)
+        ps_bottom_sheet = BottomSheetBehavior.from(bottomSheet)
+        ps_bottom_sheet.state = BottomSheetBehavior.STATE_HIDDEN
 
         enableEdgeToEdge()
     }
@@ -117,6 +130,7 @@ class PlusActivity : FragmentActivity(), OnMapReadyCallback {
 //        val longitude = coordinates[1].toDouble()
 //        return Triple(name, latitude, longitude)
 //    }
+
 
     // 현재위치의 LatLng값을 얻어오는 함수입니다. 필요시 사용하세요! (currentLatLng이 이름으로 변수 선언 후 사용하시면 됩니다)
     private fun fetchCurrentLocation() {
@@ -214,7 +228,12 @@ class PlusActivity : FragmentActivity(), OnMapReadyCallback {
         }
 
         addWifi_Btn.setOnClickListener {
-            showSaveConfirmationDialog(center)
+            if (myWifi_name.text.isNullOrEmpty() || myWifi_name.text.isBlank()){
+                Toast.makeText(this, "WIFI 이름을 입력하세요", Toast.LENGTH_SHORT).show()
+            }
+            else {
+                showSaveConfirmationDialog(center)
+            }
             // 현재위치도 같이 확인
 //            fetchCurrentLocation()
 //            val currentLatitude = currentLatLng?.latitude ?: 0.0
@@ -224,6 +243,9 @@ class PlusActivity : FragmentActivity(), OnMapReadyCallback {
         close_Btn.setOnClickListener {
             val intent = Intent(this@PlusActivity, SecondActivity::class.java)
             startActivity(intent)
+        }
+        pw_Btn.setOnClickListener {
+            ps_bottom_sheet.state = BottomSheetBehavior.STATE_EXPANDED
         }
     }
 
@@ -235,8 +257,14 @@ class PlusActivity : FragmentActivity(), OnMapReadyCallback {
     }
 
     // txt파일에 wifi정보 저장
-    private fun saveToFile(wifiName: String, latitude: Double, longitude: Double) {
-        val fileContent = "$wifiName - $latitude, $longitude\n"
+    private fun saveToFile(wifiName: String, latitude: Double, longitude: Double, password: String) {
+        var fileContent : String? = ""
+        if (password.isNullOrEmpty() || password.isBlank()) {
+            fileContent = "$wifiName - $latitude, $longitude / 없음\n"
+        } else {
+            fileContent = "$wifiName - $latitude, $longitude / $password\n"
+        }
+
         try {
             FileOutputStream(File(filesDir, FILENAME), true).use {
                 it.write(fileContent.toByteArray())
@@ -271,12 +299,14 @@ class PlusActivity : FragmentActivity(), OnMapReadyCallback {
 
     private fun showSaveConfirmationDialog(center : LatLng) {
         val wifiName = myWifi_name.text.toString()
+        val password = ps_text.text.toString()
+
         AlertDialog.Builder(this)
-            .setTitle(wifiName)
-            .setMessage("Wi-Fi 정보를 저장하시겠습니까?")
+            .setTitle("Wi-Fi 정보를 저장하시겠습니까?")
+            .setMessage(wifiName)
             .setPositiveButton("저장") { dialogInterface: DialogInterface, i: Int ->
                 center?.let {
-                    saveToFile(wifiName, it.latitude, it.longitude)
+                    saveToFile(wifiName, it.latitude, it.longitude, password)
                 }
                 // 중심 위치를 잘 가져왔나 확인 용
                 //            Toast.makeText(

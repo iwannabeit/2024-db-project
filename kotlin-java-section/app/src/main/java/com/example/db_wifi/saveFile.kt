@@ -1,32 +1,35 @@
-//import com.example.db_wifi.ItemKey
-//import com.naver.maps.geometry.LatLng
-//import com.naver.maps.map.overlay.Marker
+////import com.example.db_wifi.ItemKey
+////import com.naver.maps.geometry.LatLng
+////import com.naver.maps.map.overlay.Marker
+////
+//////// -------------------------------
+//////// 예시로 데이터 생성
+//////val latitude = 127.442
+//////val longitude = 53.223
+//////val description = "Example marker"
+//////
+//////// 서버에 전송할 데이터 객체 생성
+//////val markerData = MarkerData(latitude, longitude, description)
+//////
+//////// Retrofit 서비스 객체를 사용하여 서버에 데이터 전송
+//////RetrofitClient.markerApiService.addMarker(markerData)
+//////.enqueue(object : Callback<Void> {
+//////    override fun onResponse(call: Call<Void>, response: Response<Void>) {
+//////        if (response.isSuccessful) {
+//////            Log.d("Marker", "Marker added successfully")
+//////        } else {
+//////            Log.e("Marker", "Failed to add marker")
+//////        }
+//////    }
+//////
+//////    override fun onFailure(call: Call<Void>, t: Throwable) {
+//////        Log.e("Marker", "Error adding marker: ${t.message}")
+//////    }
+//////})
+//////// -------------------------------
 //
-////// -------------------------------
-////// 예시로 데이터 생성
-////val latitude = 127.442
-////val longitude = 53.223
-////val description = "Example marker"
-////
-////// 서버에 전송할 데이터 객체 생성
-////val markerData = MarkerData(latitude, longitude, description)
-////
-////// Retrofit 서비스 객체를 사용하여 서버에 데이터 전송
-////RetrofitClient.markerApiService.addMarker(markerData)
-////.enqueue(object : Callback<Void> {
-////    override fun onResponse(call: Call<Void>, response: Response<Void>) {
-////        if (response.isSuccessful) {
-////            Log.d("Marker", "Marker added successfully")
-////        } else {
-////            Log.e("Marker", "Failed to add marker")
-////        }
-////    }
-////
-////    override fun onFailure(call: Call<Void>, t: Throwable) {
-////        Log.e("Marker", "Error adding marker: ${t.message}")
-////    }
-////})
-////// -------------------------------
+//
+//
 //package com.example.db_wifi
 //
 //import android.annotation.SuppressLint
@@ -68,7 +71,6 @@
 //import android.widget.ImageButton
 //import android.widget.LinearLayout
 //import androidx.core.app.ActivityCompat
-//import com.example.db_wifi.addMarkerControll.EditActivity
 //import com.example.db_wifi.addMarkerControll.SecondActivity
 //import com.example.db_wifi.addMarkerControll.WifiLocation
 //import com.example.db_wifi.addMarkerData.RetrofitClient
@@ -496,17 +498,16 @@
 //
 //                line = bufferedReader.readLine()
 //            }
-//
-//
+////            wifiDataList.forEach {
+////                Toast.makeText(this, "${it.name}", Toast.LENGTH_SHORT).show()
+////            }
 //            bufferedReader.close()
 //        } catch (e: IOException) {
 //            Toast.makeText(this, "실패", Toast.LENGTH_SHORT).show()
 //            e.printStackTrace()
 //        }
+////        return wifiDataList
 //    }
-//
-//
-//
 //
 //    private fun extractWifiLocationFromLine(line: String): WifiLocation {
 //        // '-'를 기준으로 이름과 좌표를 분리
@@ -530,8 +531,19 @@
 //
 //        // 현재 위치 위도, 경도 저장
 //        fetchCurrentLocation()
+////        currentLatitude = currentLatLng?.latitude ?: 0.0
+////        currentLongitude = currentLatLng?.longitude ?: 0.0
 //
+//        val secondActivity = SecondActivity()
+//
+//
+//        // 마커 띄우는 곳!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//        val s_marker = Marker()
+//
+//        val coordinates = mutableListOf<LatLng>()
 //        var markerPosition : LatLng? = null
+//
+//
 //
 //        //클라이언트 객체 생성
 //        val naverMapApiInterface = NaverMapRequest.getClient().create(NaverMapApiInterface::class.java)
@@ -636,6 +648,7 @@
 //                        out_clusterer.map = null
 //                        in_clusterer.map = naverMap
 //                        my_clusterer.map = null
+//
 //                    }
 //
 //                    outdoorBtn.setOnClickListener {
@@ -654,35 +667,41 @@
 //                        out_clusterer.map = naverMap
 //                        in_clusterer.map = null
 //                        my_clusterer.map = null
+//
 //                    }
 //
-//                    myBtn.setOnClickListener{
-//                        loadFile()
+//                    myBtn.setOnClickListener {
 //                        isIndoor = false
 //                        isOutdoor = false
-//                        myMarkers.forEach{ it.map = null }
+//                        out_clusterer.map = null
+//                        in_clusterer.map = null
+//                        my_clusterer.map = null
 //
-//                        wifiDataList.forEach{data ->
+//                        myMarkers.forEach { it.map = null }
+//                        myMarkers.clear()
+//
+//                        loadFile()
+//
+//                        wifiDataList.forEach { data ->
 //                            val myMarker = Marker() // 내가 설정한 마커
-//                            myMarker.position = LatLng(data.latitude,data.longitude)
+//                            myMarker.position = LatLng(data.latitude, data.longitude)
+//
 //                            myMarker.alpha = 0.0f
 //                            myMarker.setOnClickListener {
 //                                markerPosition = myMarker.position
 //                                openDrawerWithMarkerInfo(data.name) // 마커에 대한 정보를 슬라이딩 드로어에 표시
 //                                true
 //                            }
-//                            my_clusterer.add(ItemKey(it.hashCode(), myMarker.position), null)
+//                            my_clusterer.add(ItemKey(data.hashCode(), myMarker.position), null)
+//
 //                            myMarkers.add(myMarker)
 //                        }
 //
-//                        out_clusterer.map = null
-//                        in_clusterer.map = null
 //                        // 마커 표시
-//                        myMarkers.forEach{ it.map = naverMap }
+//                        myMarkers.forEach { it.map = naverMap }
 //                        my_clusterer.map = naverMap
-//
-//
 //                    }
+//
 //
 //                    // 경로찾기 버튼 클릭
 //                    search_loadBtn.setOnClickListener{
@@ -718,8 +737,10 @@
 //
 //                        indoorMarkers.forEach { it.map = null }
 //                        outdoorMarkers.forEach{ it.map = null}
+//                        myMarkers.forEach{ it.map = null}
 //                        out_clusterer.map = null
 //                        in_clusterer.map = null
+//                        my_clusterer.map = null
 //
 //                    }
 //
@@ -739,6 +760,8 @@
 //                        start_clusterer.clear()
 //                        end_clusterer.clear()
 //
+//
+////            Toast.makeText(this,  "경로 안내가 종료 되었습니다.", Toast.LENGTH_SHORT).show()
 //                        finish_loadBtn.visibility = View.INVISIBLE
 //                        finish_loadBtn.isClickable = false
 //                    }

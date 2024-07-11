@@ -31,11 +31,16 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.location.Location
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import androidx.core.app.ActivityCompat
@@ -219,8 +224,6 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
         finish_loadBtn = findViewById(R.id.finish_loadBtn)
         finish_loadBtn.visibility = View.INVISIBLE
         finish_loadBtn.isClickable = false
-
-
 
 
         autoComplete.setAdapter(ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, searchList))
@@ -454,7 +457,6 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
     private val wifiDataList = mutableListOf<WifiLocation>()
     private fun loadFile(){
         try {
-            Toast.makeText(this, "MY WIFI", Toast.LENGTH_SHORT).show()
             val inputStream = openFileInput("wifi_data.txt")
             val inputStreamReader = inputStream.reader()
             val bufferedReader = BufferedReader(inputStreamReader)
@@ -478,15 +480,18 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
     }
 
     private fun extractWifiLocationFromLine(line: String): WifiLocation {
-        // '-'를 기준으로 이름과 좌표를 분리
         val parts = line.split(" - ")
         // 첫 번째 요소가 이름
         val name = parts[0]
+
         val coordinates = parts[1].split(", ")
         val latitude = coordinates[0].toDouble()
-        val longitude = coordinates[1].toDouble()
 
-        return WifiLocation(name, latitude, longitude)
+        val coordinates2 = coordinates[1].split("/")
+        val longitude = coordinates2[0].toDouble()
+        val password = coordinates2[1]
+
+        return WifiLocation(name, latitude, longitude, password)
     }
 
     override fun onMapReady(naverMap: NaverMap) {
@@ -670,7 +675,6 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
                         my_clusterer.map = naverMap
                     }
 
-
                     // 경로찾기 버튼 클릭
                     search_loadBtn.setOnClickListener{
                         start_clusterer.clear()
@@ -705,10 +709,8 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
                         indoorMarkers.forEach { it.map = null }
                         outdoorMarkers.forEach{ it.map = null}
-                        myMarkers.forEach{ it.map = null}
                         out_clusterer.map = null
                         in_clusterer.map = null
-                        my_clusterer.map = null
 
                     }
 
@@ -733,7 +735,19 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
                         finish_loadBtn.visibility = View.INVISIBLE
                         finish_loadBtn.isClickable = false
                     }
-
+//                    myBtn.setOnClickListener{
+//                        isIndoor = false
+//                        isOutdoor = false
+//                        loadFile()
+//                        wifiDataList.forEach{data ->
+//                            val myMarker = Marker() // 내가 설정한 마커
+//                            myMarker.position = LatLng(data.latitude,data.longitude)
+//                            myMarker.map = naverMap
+//                            myMarkers.add(myMarker)
+//                            Log.d("WifiData3", "$data")
+//                        }
+//                        // 마커 표시
+//                    }
 
                 }
             }
@@ -786,6 +800,8 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
             startActivity(intent)
         }
     }
+
+
     //    companion object {
 //        private const val LOCATION_PERMISSION_REQUEST_CODE = 100
 //    }

@@ -25,8 +25,10 @@ import android.content.Intent
 import android.location.Location
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import androidx.core.app.ActivityCompat
 import com.example.db_wifi.R
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.naver.maps.map.CameraAnimation
 import com.naver.maps.map.CameraUpdate
 import com.naver.maps.map.overlay.Marker
@@ -54,6 +56,10 @@ class EditActivity : FragmentActivity(), OnMapReadyCallback {
     private lateinit var editWifi_Btn : ImageButton
     private lateinit var close_Btn : ImageButton
     private lateinit var myWifi_name : EditText
+    private lateinit var pw_Btn : ImageButton
+    private lateinit var ps_text : EditText
+
+    private lateinit var ps_bottom_sheet : BottomSheetBehavior<LinearLayout>
 
     // txt파일
     private val FILENAME: String = "wifi_data.txt"
@@ -87,7 +93,7 @@ class EditActivity : FragmentActivity(), OnMapReadyCallback {
         EditWifi = intent.getSerializableExtra("EditWifi") as WifiLocation
         LineIndex = intent.getIntExtra("LineIndex", -1)
         // 잘 가져왔는지 확인
-        Log.d("EditWifi", "${EditWifi.name}, ${EditWifi.latitude}, ${EditWifi.longitude}, $LineIndex")
+        Log.d("EditWifi", "${EditWifi.name}, ${EditWifi.latitude}, ${EditWifi.longitude}, ${EditWifi.password}, $LineIndex")
 
 
         // 위치 권한 확인
@@ -107,7 +113,14 @@ class EditActivity : FragmentActivity(), OnMapReadyCallback {
         editWifi_Btn = findViewById(R.id.addWifi_Btn)
         close_Btn = findViewById(R.id.close_Btn)
         myWifi_name = findViewById(R.id.myWifi_name)
+        pw_Btn = findViewById(R.id.pw_Btn)
+        ps_text = findViewById(R.id.ps_text)
 
+        val bottomSheet = findViewById<LinearLayout>(R.id.ps_bottom_sheet)
+        ps_bottom_sheet = BottomSheetBehavior.from(bottomSheet)
+        ps_bottom_sheet.state = BottomSheetBehavior.STATE_HIDDEN
+
+        ps_text.setText(EditWifi.password)
         myWifi_name.setText(EditWifi.name)
 
         enableEdgeToEdge()
@@ -220,7 +233,12 @@ class EditActivity : FragmentActivity(), OnMapReadyCallback {
         }
 
         editWifi_Btn.setOnClickListener {
-            showSaveConfirmationDialog(center)
+            if (myWifi_name.text.isNullOrEmpty() || myWifi_name.text.isBlank()){
+                Toast.makeText(this, "WIFI 이름을 입력하세요", Toast.LENGTH_SHORT).show()
+            }
+            else {
+                showSaveConfirmationDialog(center)
+            }
             // 현재위치도 같이 확인
 //            fetchCurrentLocation()
 //            val currentLatitude = currentLatLng?.latitude ?: 0.0
@@ -230,6 +248,9 @@ class EditActivity : FragmentActivity(), OnMapReadyCallback {
         close_Btn.setOnClickListener {
             val intent = Intent(this@EditActivity, SecondActivity::class.java)
             startActivity(intent)
+        }
+        pw_Btn.setOnClickListener {
+            ps_bottom_sheet.state = BottomSheetBehavior.STATE_EXPANDED
         }
     }
 
@@ -263,13 +284,22 @@ class EditActivity : FragmentActivity(), OnMapReadyCallback {
 
     private fun showSaveConfirmationDialog(center : LatLng) {
         val wifiName = myWifi_name.text.toString()
+        var password : String? = ""
+        if(ps_text.text.isNullOrEmpty() || ps_text.text.isBlank()) {
+            Log.d("psSetting", "1")
+            password = "없음"
+        } else {
+            password = ps_text.text.toString()
+            Log.d("psSetting", "222${password}")
+
+        }
         AlertDialog.Builder(this)
-            .setTitle(wifiName)
-            .setMessage("Wi-Fi 정보를 변경하시겠습니까?")
+            .setTitle("Wi-Fi 정보를 변경하시겠습니까?")
+            .setMessage(wifiName)
             .setPositiveButton("변경") { dialogInterface: DialogInterface, i: Int ->
                 center?.let {
                     // 기존 EidtWifi의 lat, lng를 center의 값으로 변경
-                    val newWifiLocation = WifiLocation(wifiName, it.latitude, it.longitude)
+                    val newWifiLocation = WifiLocation(wifiName, it.latitude, it.longitude, password)
                     EditWifi = newWifiLocation
 
                     // txt 파일 업데이트
@@ -300,7 +330,7 @@ class EditActivity : FragmentActivity(), OnMapReadyCallback {
             while (line != null) {
                 if (lineNumber == LineIndex) {
                     // 해당 라인 수정
-                    val updatedLine = "${EditWifi.name} - ${EditWifi.latitude}, ${EditWifi.longitude}"
+                    val updatedLine = "${EditWifi.name} - ${EditWifi.latitude}, ${EditWifi.longitude} / ${EditWifi.password}"
                     bufferedWriter.write(updatedLine)
                 } else {
                     // 기존 라인 그대로 쓰기
