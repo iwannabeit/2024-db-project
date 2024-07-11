@@ -103,8 +103,6 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
     private lateinit var non_scaleBtn : Button
     private lateinit var mywifi_Btn : Button // 내 와이파이 버튼
 
-    private var mywifiBtn_isTouch : Boolean? = false
-
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<LinearLayout>
 
 
@@ -130,14 +128,6 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
     var isIndoor = false
     var isOutdoor = false
     var isMyMarker = false
-
-    private lateinit var drawer: LinearLayout
-    private lateinit var confirmButton: Button
-    private lateinit var cancelButton: Button
-    private lateinit var editText_pw: EditText
-    private lateinit var buttonBackS : Button
-
-    private val myMarkers = mutableListOf<Marker>()
 
     // 위치 권한 요청
     private val requestPermissionLauncher =
@@ -235,42 +225,6 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
         finish_loadBtn.visibility = View.INVISIBLE
         finish_loadBtn.isClickable = false
 
-        drawer = findViewById(R.id.drawer)
-        confirmButton = findViewById(R.id.confirmButton)
-        cancelButton = findViewById(R.id.cancelButton)
-        editText_pw = findViewById(R.id.editText_pw)
-        buttonBackS = findViewById(R.id.buttonBackS)
-
-        val buttons = arrayOf(
-            findViewById<Button>(R.id.button1),
-            findViewById<Button>(R.id.button2),
-            findViewById<Button>(R.id.button3),
-            findViewById<Button>(R.id.button4),
-            findViewById<Button>(R.id.button5),
-            findViewById<Button>(R.id.button6),
-            findViewById<Button>(R.id.button7),
-            findViewById<Button>(R.id.button8),
-            findViewById<Button>(R.id.button9),
-            findViewById<Button>(R.id.button0),
-            )
-
-        // 각 숫자 버튼에 클릭 리스너 설정
-        for (button in buttons) {
-            button.setOnClickListener {
-                val number = button.text.toString()
-                val currentText = editText_pw.text.toString()
-                editText_pw.setText(currentText + number)
-            }
-        }
-
-        buttonBackS.setOnClickListener {
-            val currentText = editText_pw.text.toString()
-            if (currentText.isNotEmpty()) {
-                val newText = currentText.substring(0, currentText.length - 1)
-                editText_pw.setText(newText)
-                editText_pw.setSelection(newText.length) // 커서를 마지막 위치로 이동
-            }
-        }
 
         autoComplete.setAdapter(ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, searchList))
 
@@ -526,15 +480,18 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
     }
 
     private fun extractWifiLocationFromLine(line: String): WifiLocation {
-        // '-'를 기준으로 이름과 좌표를 분리
         val parts = line.split(" - ")
         // 첫 번째 요소가 이름
         val name = parts[0]
+
         val coordinates = parts[1].split(", ")
         val latitude = coordinates[0].toDouble()
-        val longitude = coordinates[1].toDouble()
 
-        return WifiLocation(name, latitude, longitude)
+        val coordinates2 = coordinates[1].split("/")
+        val longitude = coordinates2[0].toDouble()
+        val password = coordinates2[1]
+
+        return WifiLocation(name, latitude, longitude, password)
     }
 
     override fun onMapReady(naverMap: NaverMap) {
@@ -578,8 +535,7 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
                     val indoorMarkers = mutableListOf<Marker>()
                     val outdoorMarkers = mutableListOf<Marker>()
-                    // 밑에 라인은 앞에 private로 선언 했습니다. (밑에 다른 함수에서 사용하기 위해)
-//                    val myMarkers = mutableListOf<Marker>()
+                    val myMarkers = mutableListOf<Marker>()
 
                     val builder: Clusterer.Builder<ItemKey> = Clusterer.Builder<ItemKey>()
 
@@ -762,11 +718,17 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
                         finish_loadBtn.isClickable = false
                     }
                     myBtn.setOnClickListener{
-                        if(mywifiBtn_isTouch == true) {
-
-                        } else if (mywifiBtn_isTouch == false) {
-                            toggleDrawer()
+                        isIndoor = false
+                        isOutdoor = false
+                        loadFile()
+                        wifiDataList.forEach{data ->
+                            val myMarker = Marker() // 내가 설정한 마커
+                            myMarker.position = LatLng(data.latitude,data.longitude)
+                            myMarker.map = naverMap
+                            myMarkers.add(myMarker)
+                            Log.d("WifiData3", "$data")
                         }
+                        // 마커 표시
                     }
 
                 }
@@ -774,22 +736,6 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
             override fun onFailure(call: Call<NaverMapItem>, t: Throwable) {
                 // 통신 실패 시 처리할 코드
                 Log.v("디버깅중", "실패!!!!!")
-
-                // 성욱(없앨예정)
-                // 저는 디비 연동이 자꾸 안되서 여기다가 했습니다.. ㅜ
-                // *주의* 여기는 onFailure 내에 있는거라 위에 onResponse내에 구현하고 여기는 지워야 합니다
-                myBtn.setOnClickListener{
-                    if(mywifiBtn_isTouch == true) {
-                        // 여기에 원래 있던 내 와이파이를 다시 안보이게 구현하면 될 것 같슴다
-                        mywifiBtn_isTouch = false
-                        myBtn.setBackgroundResource(R.drawable.rounded_button)
-                        myMarkers.forEach{ it.map = null }
-                        Toast.makeText(this@MainActivity, "내 와이파이 숨기기", Toast.LENGTH_SHORT).show()
-                    } else if (mywifiBtn_isTouch == false) {
-                        toggleDrawer()
-                    }
-                }
-                // 여기까지
             }
         })
 
@@ -834,61 +780,6 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
         mywifi_Btn.setOnClickListener{ // 내 와이파이 리스트를 보는 버튼
             val intent = Intent(this@MainActivity, SecondActivity::class.java)
             startActivity(intent)
-        }
-        confirmButton.setOnClickListener {
-            validatePin()
-        }
-
-        cancelButton.setOnClickListener {
-            closeDrawer()
-            editText_pw.text.clear()
-        }
-    }
-
-    private fun toggleDrawer() {
-        if (drawer.visibility == View.VISIBLE) {
-            closeDrawer()
-        } else {
-            openDrawer()
-        }
-    }
-
-    private fun openDrawer() {
-        drawer.visibility = View.VISIBLE
-    }
-
-    private fun closeDrawer() {
-        drawer.visibility = View.GONE
-    }
-
-
-    private fun validatePin() {
-        val text = editText_pw.text.toString()
-
-        if (text.length == 6) {
-            // test 용
-            Toast.makeText(this, "입력된 PIN 번호: $text", Toast.LENGTH_SHORT).show()
-
-            editText_pw.text.clear()
-            closeDrawer()
-            // 여기에 PIN 번호를 이용해서 구현가능합니다
-            // 일단 임의로 마커들이 보이게 했습니다
-            isIndoor = false
-            isOutdoor = false
-            loadFile()
-            wifiDataList.forEach{data ->
-                val myMarker = Marker() // 내가 설정한 마커
-                myMarker.position = LatLng(data.latitude,data.longitude)
-                myMarker.map = naverMap
-                myMarkers.add(myMarker)
-                Log.d("WifiData3", "$data")
-            }
-            // 마커 표시
-            myBtn.setBackgroundResource(R.drawable.rounded_seleted_button)
-            mywifiBtn_isTouch = true
-        }
-        else {
-            Toast.makeText(this, "여섯 자리 숫자를 전부 입력하세요", Toast.LENGTH_SHORT).show()
         }
     }
 
