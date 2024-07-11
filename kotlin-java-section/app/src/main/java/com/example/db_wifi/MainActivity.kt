@@ -31,11 +31,16 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.location.Location
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import androidx.core.app.ActivityCompat
@@ -123,6 +128,13 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
     var isIndoor = false
     var isOutdoor = false
     var isMyMarker = false
+
+    // 성욱 PIN기능
+    private lateinit var drawer: LinearLayout
+    private lateinit var confirmButton: Button
+    private lateinit var cancelButton: Button
+    private lateinit var editText_pw: EditText
+    // 여기까지
 
     // 위치 권한 요청
     private val requestPermissionLauncher =
@@ -220,8 +232,36 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
         finish_loadBtn.visibility = View.INVISIBLE
         finish_loadBtn.isClickable = false
 
+        // 성욱 PIN기능
+        drawer = findViewById(R.id.drawer)
+        confirmButton = findViewById(R.id.confirmButton)
+        cancelButton = findViewById(R.id.cancelButton)
+        editText_pw = findViewById(R.id.editText_pw)
 
 
+        // 숫자 버튼들을 찾아서 클릭 리스너 설정
+        val buttons = arrayOf(
+            findViewById<Button>(R.id.button1),
+            findViewById<Button>(R.id.button2),
+            findViewById<Button>(R.id.button3),
+            findViewById<Button>(R.id.button4),
+            findViewById<Button>(R.id.button5),
+            findViewById<Button>(R.id.button6),
+            findViewById<Button>(R.id.button7),
+            findViewById<Button>(R.id.button8),
+            findViewById<Button>(R.id.button9),
+            findViewById<Button>(R.id.button0),
+            )
+
+        // 각 숫자 버튼에 클릭 리스너 설정
+        for (button in buttons) {
+            button.setOnClickListener {
+                val number = button.text.toString()
+                val currentText = editText_pw.text.toString()
+                editText_pw.setText(currentText + number)
+            }
+        }
+        // 여기까지
 
         autoComplete.setAdapter(ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, searchList))
 
@@ -638,10 +678,12 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
                         out_clusterer.map = null
                         in_clusterer.map = null
                         loadFile()
+                        Log.d("WifiData3", "1")
                         wifiDataList.forEach{data ->
                             val myMarker = Marker() // 내가 설정한 마커
                             myMarker.position = LatLng(data.latitude,data.longitude)
                             myMarkers.add(myMarker)
+                            Log.d("WifiData3", "$data")
                         }
                         // 마커 표시
                         myMarkers.forEach{ it.map = naverMap }
@@ -716,6 +758,24 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
             override fun onFailure(call: Call<NaverMapItem>, t: Throwable) {
                 // 통신 실패 시 처리할 코드
                 Log.v("디버깅중", "실패!!!!!")
+
+                // 성욱(없앨예정)
+                myBtn.setOnClickListener{
+                    isIndoor = false
+                    isOutdoor = false
+                    loadFile()
+                    Log.d("WifiData3", "1")
+                    wifiDataList.forEach{data ->
+                        val myMarker = Marker() // 내가 설정한 마커
+                        myMarker.position = LatLng(data.latitude,data.longitude)
+                        myMarker.map = null
+                        Log.d("WifiData3", "$data")
+                    }
+                    // 마커 표시
+
+                    toggleDrawer()
+                }
+                // 여기까지
             }
         })
 
@@ -761,7 +821,171 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
             val intent = Intent(this@MainActivity, SecondActivity::class.java)
             startActivity(intent)
         }
+        // 성욱
+        confirmButton.setOnClickListener {
+            validatePin()
+        }
+
+        cancelButton.setOnClickListener {
+            closeDrawer()
+            editText_pw.text.clear()
+        }
+        // 여기까지
     }
+
+    // 성욱
+    private fun toggleDrawer() {
+        if (drawer.visibility == View.VISIBLE) {
+            closeDrawer()
+        } else {
+            openDrawer()
+        }
+    }
+
+    private fun openDrawer() {
+        drawer.visibility = View.VISIBLE
+    }
+
+    private fun closeDrawer() {
+        drawer.visibility = View.GONE
+    }
+
+
+    private fun validatePin() {
+        val text = editText_pw.text.toString()
+
+        if (text.length == 6) {
+            // test 용
+            Toast.makeText(this, "입력된 PIN 번호: $text", Toast.LENGTH_SHORT).show()
+
+            editText_pw.text.clear()
+            closeDrawer()
+        }
+        else {
+            Toast.makeText(this, "여섯 자리 숫자를 전부 입력하세요", Toast.LENGTH_SHORT).show()
+        }
+        // 여기에 PIN 번호를 처리하는 로직을 추가할 수 있음
+    }
+
+
+
+//    // 각 EditText의 텍스트 변경을 감지하는 TextWatcher 클래스
+//    inner class PinTextWatcher(private val currentPosition: Int) : TextWatcher, View.OnKeyListener, View.OnTouchListener {
+//        private var previousString: String = ""
+//
+//        init {
+//            // onKey를 사용하기 위해서 입니다
+//            // EditText에 OnKeyListener 설정
+//            when (currentPosition) {
+//                1 -> {
+//                    editText1.setOnKeyListener(this)
+//                    editText1.setOnTouchListener(this)
+//                }
+//                2 -> {
+//                    editText2.setOnKeyListener(this)
+//                    editText2.setOnTouchListener(this)
+//                }
+//                3 -> {
+//                    editText3.setOnKeyListener(this)
+//                    editText3.setOnTouchListener(this)
+//                }
+//                4 -> {
+//                    editText4.setOnKeyListener(this)
+//                    editText4.setOnTouchListener(this)
+//                }
+//            }
+//        }
+//
+//        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+//            previousString = s.toString()
+//        }
+//
+//        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+//
+//        override fun afterTextChanged(s: Editable?) {
+//            val input = s.toString()
+//
+////            if (input.length == 1) {
+////                moveToNextEditText()
+////            } else if (input.isEmpty() && previousString.isNotEmpty()) {
+////                moveToPreviousEditText()
+////            }
+////            if (input.isEmpty() && previousString.isNotEmpty()) {
+////                moveToPreviousEditText()
+////            }
+//        }
+//
+//        // 사용하려면 , View.OnKeyListener 추가해야합니다
+//        override fun onKey(v: View?, keyCode: Int, event: KeyEvent?): Boolean {
+//            if (v == null || event == null) {
+//                return false
+//            }
+////
+////            if (v is EditText && event.action == KeyEvent.ACTION_DOWN && v.text.toString().length == 1) {
+////                if (v.text.toString().length == 1) {
+////
+////                } else if (v.text.toString().isEmpty())  {
+////                    moveToNextEditText()
+////                }
+////            }
+//            if (v is EditText && keyCode == KeyEvent.KEYCODE_DEL && event.action == KeyEvent.ACTION_DOWN) {
+//                // EditText에서 백스페이스가 눌렸을 때 동작할 코드
+//                    moveToPreviousEditText()
+//            } else if (v is EditText && event.action == KeyEvent.ACTION_DOWN) {
+//                moveToNextEditText()
+//            }
+//
+//            // 이벤트를 계속해서 처리할지 여부를 반환합니다.
+//            return false
+//        }
+//
+//        override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+//            if (v is EditText && event?.action == MotionEvent.ACTION_UP) {
+//                Log.d("test1", "$currentFocusEditText")
+//                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+//                imm.showSoftInput(currentFocusEditText, InputMethodManager.SHOW_IMPLICIT)
+//                currentFocusEditText.requestFocus()
+//            }
+//
+//            return false
+//        }
+//
+//        private fun moveToNextEditText() {
+//            when (currentPosition) {
+//                1 -> {
+//                    editText2.requestFocus()
+////                    currentFocusEditText = editText2
+//                }
+//                2 -> {
+//                    editText3.requestFocus()
+////                    currentFocusEditText = editText3
+//                }
+//                3 -> {
+//                    editText4.requestFocus()
+////                    currentFocusEditText = editText4
+//                }
+//            }
+//        }
+//
+//        private fun moveToPreviousEditText() {
+//            when (currentPosition) {
+//                4 -> {
+//                    editText3.requestFocus()
+////                    currentFocusEditText = editText3
+//                }
+//                3 -> {
+//                    editText2.requestFocus()
+////                    currentFocusEditText = editText2
+//                }
+//                2 -> {
+//                    editText1.requestFocus()
+////                    currentFocusEditText = editText1
+//                }
+//            }
+//        }
+//    }
+    // 여기까지
+
     //    companion object {
 //        private const val LOCATION_PERMISSION_REQUEST_CODE = 100
 //    }
