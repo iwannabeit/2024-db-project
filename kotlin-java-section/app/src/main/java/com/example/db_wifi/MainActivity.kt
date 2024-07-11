@@ -709,8 +709,10 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
                         indoorMarkers.forEach { it.map = null }
                         outdoorMarkers.forEach{ it.map = null}
+                        myMarkers.forEach{it.map = null}
                         out_clusterer.map = null
                         in_clusterer.map = null
+                        my_clusterer.map = null
 
                     }
 
