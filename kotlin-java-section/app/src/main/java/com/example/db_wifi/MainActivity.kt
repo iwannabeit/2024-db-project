@@ -737,19 +737,6 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
                         finish_loadBtn.visibility = View.INVISIBLE
                         finish_loadBtn.isClickable = false
                     }
-//                    myBtn.setOnClickListener{
-//                        isIndoor = false
-//                        isOutdoor = false
-//                        loadFile()
-//                        wifiDataList.forEach{data ->
-//                            val myMarker = Marker() // 내가 설정한 마커
-//                            myMarker.position = LatLng(data.latitude,data.longitude)
-//                            myMarker.map = naverMap
-//                            myMarkers.add(myMarker)
-//                            Log.d("WifiData3", "$data")
-//                        }
-//                        // 마커 표시
-//                    }
 
                 }
             }
