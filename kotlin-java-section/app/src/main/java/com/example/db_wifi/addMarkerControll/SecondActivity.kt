@@ -1,6 +1,8 @@
 package com.example.db_wifi.addMarkerControll
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
+import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
@@ -75,9 +77,9 @@ class SecondActivity : AppCompatActivity() {
             var line: String? = bufferedReader.readLine()
             while (line != null) {
 
+                Log.d("psSetting", "@${line}")
                 val wifiLatLng = extractWifiLocationFromLine(line)
                 wifiDataList.add(wifiLatLng)
-
                 addLinearLayout(line)
                 line = bufferedReader.readLine()
             }
@@ -93,11 +95,15 @@ class SecondActivity : AppCompatActivity() {
         val parts = line.split(" - ")
         // 첫 번째 요소가 이름
         val name = parts[0]
+
         val coordinates = parts[1].split(", ")
         val latitude = coordinates[0].toDouble()
-        val longitude = coordinates[1].toDouble()
 
-        return WifiLocation(name, latitude, longitude)
+        val coordinates2 = coordinates[1].split("/")
+        val longitude = coordinates2[0].toDouble()
+        val password = coordinates2[1]
+
+        return WifiLocation(name, latitude, longitude, password)
     }
 
     @SuppressLint("RestrictedApi")
@@ -105,6 +111,18 @@ class SecondActivity : AppCompatActivity() {
         // 각각 할당되는 LinearLayout 생성 (여기에 wifi 정보랑 버튼들이 있습니다)
         // newLinearLayout에 TextView와 button_layout이 있고,
         // TextView에는 wifi의 정보, button_layout에는 버튼들과 체크박스가 있습니다
+
+
+        // '-'를 기준으로 이름과 좌표를 분리합니다.
+        val splitText = text.split(" - ")
+        val name = splitText[0] // 이름만 가져옵니다.
+        val coordinates = splitText[1]
+        val coordinatesSplit = coordinates.split(", ")
+        val longitudePasswordSplit = coordinatesSplit[1].split("/")
+        val password = longitudePasswordSplit[1] // 비밀번호를 가져옵니다.
+
+
+
         val newLinearLayout = LinearLayout(this)
         newLinearLayout.layoutParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
@@ -114,7 +132,7 @@ class SecondActivity : AppCompatActivity() {
 
         // TextView 생성
         val textView = TextView(this)
-        textView.text = text
+        textView.text = name // Wi-Fi 이름만 설정합니다.
         textView.setTextColor(Color.BLACK)
         textView.textSize = 18f // TypedValue 사용 없이 직접 설정
         textView.setPadding(20, 20, 20, 20)
@@ -142,14 +160,20 @@ class SecondActivity : AppCompatActivity() {
         val editButton = Button(this)
         editButton.text = "편집" // 후에 그림으로 바꾸면 좋을 것 같슴다
         editButton.setOnClickListener {
-            EditWifiLocation(newLinearLayout)
+            EditWifiLocation(newLinearLayout, password)
         }
 
-        // 지도 버튼 생성
+        // 비밀번호 버튼 생성
         val mapButton = Button(this)
-        mapButton.text = "지도"
+        mapButton.text = "비밀번호"
         mapButton.setOnClickListener {
-            Toast.makeText(this, "지도 버튼 클릭됨", Toast.LENGTH_SHORT).show()
+            AlertDialog.Builder(this)
+                .setTitle("Wi-Fi 비밀번호")
+                .setMessage(password)
+                .setNegativeButton("닫기") { dialogInterface: DialogInterface, i: Int ->
+                    // 취소 버튼 클릭 시 아무 동작 없음
+                }
+                .show()
         }
 
         val checkBox = CheckBox(this)
@@ -276,17 +300,18 @@ class SecondActivity : AppCompatActivity() {
             e.printStackTrace()
         }
     }
-    private fun EditWifiLocation(linearLayout: LinearLayout) {
+    private fun EditWifiLocation(linearLayout: LinearLayout, password : String) {
         val index = wifi_info.indexOfChild(linearLayout)
         if (index != -1) {
             val view = linearLayout.getChildAt(0) as TextView
-            val text = view.text.toString()
+            val text = view.text.toString() + "/ ${password}"
+            Log.d("psSetting", "@@${text}")
 
             val EditWifi = extractWifiLocationFromLine(text)
             val intent = Intent(this@SecondActivity, EditActivity::class.java)
             intent.putExtra("EditWifi", EditWifi)
             intent.putExtra("LineIndex", index) // wifi_info의 인덱스를 넣습니다
-            Log.d("EditWifi1", "${EditWifi.name}, ${EditWifi.latitude}, ${EditWifi.longitude} $index")
+            Log.d("EditWifi1", "${EditWifi.name}, ${EditWifi.latitude}, ${EditWifi.longitude}, ${EditWifi.password}, $index")
             startActivity(intent)
         } else {
             Log.e("EditWifiLocation", "LinearLayout not found in wifi_info")

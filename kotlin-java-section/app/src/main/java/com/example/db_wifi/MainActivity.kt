@@ -31,11 +31,16 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.location.Location
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import androidx.core.app.ActivityCompat
@@ -219,8 +224,6 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
         finish_loadBtn = findViewById(R.id.finish_loadBtn)
         finish_loadBtn.visibility = View.INVISIBLE
         finish_loadBtn.isClickable = false
-
-
 
 
         autoComplete.setAdapter(ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, searchList))
@@ -477,15 +480,18 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
     }
 
     private fun extractWifiLocationFromLine(line: String): WifiLocation {
-        // '-'를 기준으로 이름과 좌표를 분리
         val parts = line.split(" - ")
         // 첫 번째 요소가 이름
         val name = parts[0]
+
         val coordinates = parts[1].split(", ")
         val latitude = coordinates[0].toDouble()
-        val longitude = coordinates[1].toDouble()
 
-        return WifiLocation(name, latitude, longitude)
+        val coordinates2 = coordinates[1].split("/")
+        val longitude = coordinates2[0].toDouble()
+        val password = coordinates2[1]
+
+        return WifiLocation(name, latitude, longitude, password)
     }
 
     override fun onMapReady(naverMap: NaverMap) {
@@ -559,6 +565,7 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
                     val in_clusterer: Clusterer<ItemKey> = builder.screenDistance(100.0).build()
                     val out_clusterer: Clusterer<ItemKey> = builder.screenDistance(100.0).build()
+                    val my_clusterer: Clusterer<ItemKey> = builder.screenDistance(100.0).build()
 
 
                     // 길찾기 클러스터
@@ -613,6 +620,8 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
                         }
                         out_clusterer.map = null
                         in_clusterer.map = naverMap
+                        my_clusterer.map = null
+
                     }
 
                     outdoorBtn.setOnClickListener {
@@ -630,23 +639,40 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
                         out_clusterer.map = naverMap
                         in_clusterer.map = null
+                        my_clusterer.map = null
+
                     }
 
-                    myBtn.setOnClickListener{
+                    myBtn.setOnClickListener {
                         isIndoor = false
                         isOutdoor = false
                         out_clusterer.map = null
                         in_clusterer.map = null
+                        my_clusterer.map = null
+
+                        myMarkers.forEach { it.map = null }
+                        myMarkers.clear()
+
                         loadFile()
-                        wifiDataList.forEach{data ->
+
+                        wifiDataList.forEach { data ->
                             val myMarker = Marker() // 내가 설정한 마커
-                            myMarker.position = LatLng(data.latitude,data.longitude)
+                            myMarker.position = LatLng(data.latitude, data.longitude)
+
+                            myMarker.alpha = 0.0f
+                            myMarker.setOnClickListener {
+                                markerPosition = myMarker.position
+                                openDrawerWithMarkerInfo(data.name) // 마커에 대한 정보를 슬라이딩 드로어에 표시
+                                true
+                            }
+                            my_clusterer.add(ItemKey(data.hashCode(), myMarker.position), null)
+
                             myMarkers.add(myMarker)
                         }
+
                         // 마커 표시
-                        myMarkers.forEach{ it.map = naverMap }
-
-
+                        myMarkers.forEach { it.map = naverMap }
+                        my_clusterer.map = naverMap
                     }
 
                     // 경로찾기 버튼 클릭
@@ -683,8 +709,10 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
                         indoorMarkers.forEach { it.map = null }
                         outdoorMarkers.forEach{ it.map = null}
+                        myMarkers.forEach{it.map = null}
                         out_clusterer.map = null
                         in_clusterer.map = null
+                        my_clusterer.map = null
 
                     }
 
@@ -709,7 +737,6 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
                         finish_loadBtn.visibility = View.INVISIBLE
                         finish_loadBtn.isClickable = false
                     }
-
 
                 }
             }
@@ -762,6 +789,8 @@ open class MainActivity : FragmentActivity(), OnMapReadyCallback {
             startActivity(intent)
         }
     }
+
+
     //    companion object {
 //        private const val LOCATION_PERMISSION_REQUEST_CODE = 100
 //    }
